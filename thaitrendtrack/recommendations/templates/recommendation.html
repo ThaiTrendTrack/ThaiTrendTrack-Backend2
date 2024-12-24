@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recommendations</title>
+</head>
+<body>
+    <h1>Recommended Movies</h1>
+
+    <h2>Selected Genres:</h2>
+    <ul>
+        {% for genre in selected_genres %}
+            <li>{{ genre }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Recommended Movie Titles:</h2>
+    <ul>
+        {% for movie in movies %}
+            <li>{{ movie }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
