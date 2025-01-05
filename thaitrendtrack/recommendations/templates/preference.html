@@ -386,7 +386,8 @@
         <p class="sub-text">Discover ThaiCineDramas tailored to your taste</p>
     </div>
 
-    <form id="genre-form" action="/recommend" method="POST">
+    <form id="genre-form" action="/recommend/" method="POST">
+        {% csrf_token %}
         <div class="genres-container">
             <!-- Genres List -->
             <div class="genres-box">

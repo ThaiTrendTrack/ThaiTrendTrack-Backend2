@@ -18,68 +18,70 @@ def preferences(request):
     return render(request, 'preference.html')
 
 
-# @csrf_exempt
-# def recommend(request):
-#     if request.method == "POST":
-#         # Get user-selected genres
-#         selected_genres = request.POST.getlist('genres')
-#         print(selected_genres)
-#
-#         # Load the CSV file
-#         csv_path = "get_databased/thai_movies_all_with_genres.csv"  # Update the path to your file
-#         movies_df = pd.read_csv(csv_path)
-#
-#         # Filter movies based on selected genres
-#         def genre_filter(genres):
-#             return any(genre in genres for genre in selected_genres)
-#
-#         filtered_movies = movies_df[movies_df['genres'].apply(genre_filter)]
-#
-#         # Sort movies by popularity and vote_average
-#         sorted_movies = filtered_movies.sort_values(
-#             by=['popularity', 'vote_average'], ascending=[False, False]
-#         )
-#
-#         # Get movie titles
-#         recommended_titles = sorted_movies['title'].tolist()
-#
-#         # Render results to a template
-#         return render(request, 'recommendation.html', {'movies': recommended_titles})
-#
-#     return render(request, 'preference.html')
+import pandas as pd
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+
+# Genre mapping dictionary
+GENRE_MAPPING = {
+    "Action": "บู๊",
+    "Adventure": "ผจญ",
+    "Crime": "อาชญากรรม",
+    "Drama": "หนังชีวิต",
+    "Thriller": "ระทึกขวัญ",
+    "Horror": "สยองขวัญ",
+    "Animation": "แอนนิเมชั่น",
+    "Fantasy": "จินตนาการ",
+    "Romance": "หนังรักโรแมนติก",
+    "Science Fiction": "นิยายวิทยาศาสตร์",
+    "Documentary": "สารคดี",
+    "Comedy": "ตลก",
+    "Western": "หนังคาวบอยตะวันตก",
+    "Mystery": "ลึกลับ",
+    "War": "สงคราม",
+    "History": "ประวัติศาสตร์",
+    "Music": "ดนตรี",
+    "Family": "ครอบครัว",
+    "TV Movie": "ภาพยนตร์โทรทัศน์"
+}
+
 
 @csrf_exempt
 def recommend(request):
     if request.method == "POST":
-        # Get user-selected genres
-        selected_genres = request.POST.getlist('genres')
+        # Get the user-selected genres
+        selected_genres = request.POST.getlist('genres[]')
+        selected_genres_thai = [GENRE_MAPPING.get(genre, genre) for genre in selected_genres]
 
-        # Print the selected genres to the console
-        print("Selected Genres:", selected_genres)
-
-        # Load the CSV file
-        csv_path = "get_databased/thai_movies_all_with_genres.csv"  # Update the path to your file
+        # Load the movie dataset
+        csv_path = "get_databased/thai_movies_all_with_genres.csv"  # Adjust the path as necessary
         movies_df = pd.read_csv(csv_path)
+
+        # Ensure the 'genres' column is treated as a string and handle NaN values
+        movies_df['genres'] = movies_df['genres'].fillna('').astype(str)
 
         # Filter movies based on selected genres
         def genre_filter(genres):
-            return any(genre in genres for genre in selected_genres)
+            return any(genre in genres for genre in selected_genres_thai)
 
         filtered_movies = movies_df[movies_df['genres'].apply(genre_filter)]
 
-        # Sort movies by popularity and vote_average
+        # Sort movies by popularity, vote_average, and release_date
         sorted_movies = filtered_movies.sort_values(
-            by=['popularity', 'vote_average'], ascending=[False, False]
+            by=['popularity', 'vote_average', 'release_date'],
+            ascending=[False, False, False]
         )
 
-        # Get movie titles
-        recommended_titles = sorted_movies['title'].tolist()
+        # Prepare movie data for the recommendation page
+        recommended_movies = sorted_movies[['title', 'popularity', 'vote_average', 'release_date', 'genres']].to_dict(
+            orient='records')
 
-        # Render results to a template and pass selected genres along with recommended titles
+        # Render recommendations
         return render(request, 'recommendation.html', {
-            'movies': recommended_titles,
+            'movies': recommended_movies,
             'selected_genres': selected_genres
         })
 
-    return render(request, 'preference.html')
- 
+    # Default render for GET requests (optional)
+    return render(request, 'recommend_form.html')
+
