@@ -3,7 +3,6 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
 # def preferences(request):
 #     if request.method == "POST":
 #         # Extract selected preferences from POST data
@@ -168,6 +167,10 @@ import pandas as pd
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+
 # Genre mapping dictionary
 GENRE_MAPPING = {
     "Action": "บู๊",
@@ -191,6 +194,7 @@ GENRE_MAPPING = {
     "TV Movie": "ภาพยนตร์โทรทัศน์"
 }
 
+
 def preferences(request):
     if request.method == "POST":
         # Extract selected preferences from POST data
@@ -203,6 +207,7 @@ def preferences(request):
         return redirect('recommend')
 
     return render(request, 'preference.html')
+
 
 @csrf_exempt
 def recommend(request):
@@ -234,6 +239,10 @@ def recommend(request):
             # Limit to the top 10 recommended movies
             recommended_movies = sorted_movies.head(10).to_dict(orient='records')
 
+            # Include poster URLs
+            for movie in recommended_movies:
+                movie['poster_url'] = movie.get('poster_url', 'No poster available')
+
             # Render the movies.html page with the recommendations
             return render(request, 'movies.html', {
                 'movies': recommended_movies,
@@ -251,6 +260,3 @@ def recommend(request):
 
     # If it's a GET request or invalid method, redirect to preferences
     return redirect('preferences')
-
-
-
