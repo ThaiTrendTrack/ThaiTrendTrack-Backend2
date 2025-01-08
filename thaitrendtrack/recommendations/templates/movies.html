@@ -408,13 +408,13 @@
             {% for movie in movies %}
             <div class="movie-card">
                 <div class="movie-image">
-                    <img src="{{ movie.poster_url }}" alt="Poster for {{ movie.title }}">
+                    <img src="{{ movie.poster_path }}" alt="Poster for {{ movie.english_title }}">
                     <button class="heart-button">
                         <span class="material-symbols-outlined">heart</span>
                     </button>
                 </div>
-                <p class="movie-title">{{ movie.title }}</p>
-                <p class="movie-subtitle">{{ movie.overview|truncatewords:15 }}</p>
+                <p class="movie-title">{{ movie.english_title }}</p>
+                <p class="movie-subtitle">{{ movie.thai_title}}</p>
                 <p class="movie-year">Release Year: {{ movie.release_date|date:"Y" }}</p>
             </div>
             {% endfor %}
