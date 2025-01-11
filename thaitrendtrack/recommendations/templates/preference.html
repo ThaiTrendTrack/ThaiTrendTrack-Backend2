@@ -381,6 +381,7 @@
         </div>
     </nav>
 
+    {% load static %}
     <div class="text-content">
         <p class="ttt-text">STEP INSIDE THAITRENDTRACK,</p>
         <p class="sub-text">Discover ThaiCineDramas tailored to your taste</p>
@@ -388,103 +389,103 @@
 
     <form id="genre-form" action="/recommend/" method="POST">
         {% csrf_token %}
-        <div class="genres-container">
-            <!-- Genres List -->
-            <div class="genres-box">
-                <img src="static/genres/action.png" alt="action">
-                <span>Action</span>
-                <input type="checkbox" name="genres[]" value="Action" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/adventure.png" alt="adventure">
-                <span>Adventure</span>
-                <input type="checkbox" name="genres[]" value="Adventure" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/animation.png" alt="animation">
-                <span>Animation</span>
-                <input type="checkbox" name="genres[]" value="Animation" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/comedy.png" alt="comedy">
-                <span>Comedy</span>
-                <input type="checkbox" name="genres[]" value="Comedy" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/crime.png" alt="crime">
-                <span>Crime</span>
-                <input type="checkbox" name="genres[]" value="Crime" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/documentary.png" alt="documentary">
-                <span>Documentary</span>
-                <input type="checkbox" name="genres[]" value="Documentary" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/drama.png" alt="drama">
-                <span>Drama</span>
-                <input type="checkbox" name="genres[]" value="Drama" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/family.png" alt="family">
-                <span>Family</span>
-                <input type="checkbox" name="genres[]" value="Family" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/fantasy.png" alt="fantasy">
-                <span>Fantasy</span>
-                <input type="checkbox" name="genres[]" value="Fantasy" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/history.png" alt="history">
-                <span>History</span>
-                <input type="checkbox" name="genres[]" value="History" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/horror.png" alt="horror">
-                <span>Horror</span>
-                <input type="checkbox" name="genres[]" value="Horror" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/music.png" alt="music">
-                <span>Music</span>
-                <input type="checkbox" name="genres[]" value="Music" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/mystery.png" alt="mystery">
-                <span>Mystery</span>
-                <input type="checkbox" name="genres[]" value="Mystery" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/romance.png" alt="romance">
-                <span>Romance</span>
-                <input type="checkbox" name="genres[]" value="Romance" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/scifi.png" alt="scifi">
-                <span>Science Fiction</span>
-                <input type="checkbox" name="genres[]" value="Science Fiction" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/thriller.png" alt="thriller">
-                <span>Thriller</span>
-                <input type="checkbox" name="genres[]" value="Thriller" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/tv-movie.png" alt="tv-movie">
-                <span>TV Movie</span>
-                <input type="checkbox" name="genres[]" value="TV Movie" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/war.png" alt="war">
-                <span>War</span>
-                <input type="checkbox" name="genres[]" value="War" hidden>
-            </div>
-            <div class="genres-box">
-                <img src="static/genres/western.png" alt="western">
-                <span>Western</span>
-                <input type="checkbox" name="genres[]" value="Western" hidden>
-            </div>
+         <div class="genres-container">
+        <!-- Genres List -->
+        <div class="genres-box">
+            <img src="{% static 'genres/action.png' %}" alt="action">
+            <span>Action</span>
+            <input type="checkbox" name="genres[]" value="Action" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/adventure.png' %}" alt="adventure">
+            <span>Adventure</span>
+            <input type="checkbox" name="genres[]" value="Adventure" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/animation.png' %}" alt="animation">
+            <span>Animation</span>
+            <input type="checkbox" name="genres[]" value="Animation" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/comedy.png' %}" alt="comedy">
+            <span>Comedy</span>
+            <input type="checkbox" name="genres[]" value="Comedy" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/crime.png' %}" alt="crime">
+            <span>Crime</span>
+            <input type="checkbox" name="genres[]" value="Crime" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/documentary.png' %}" alt="documentary">
+            <span>Documentary</span>
+            <input type="checkbox" name="genres[]" value="Documentary" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/drama.png' %}" alt="drama">
+            <span>Drama</span>
+            <input type="checkbox" name="genres[]" value="Drama" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/family.png' %}" alt="family">
+            <span>Family</span>
+            <input type="checkbox" name="genres[]" value="Family" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/fantasy.png' %}" alt="fantasy">
+            <span>Fantasy</span>
+            <input type="checkbox" name="genres[]" value="Fantasy" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/history.png' %}" alt="history">
+            <span>History</span>
+            <input type="checkbox" name="genres[]" value="History" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/horror.png' %}" alt="horror">
+            <span>Horror</span>
+            <input type="checkbox" name="genres[]" value="Horror" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/music.png' %}" alt="music">
+            <span>Music</span>
+            <input type="checkbox" name="genres[]" value="Music" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/mystery.png' %}" alt="mystery">
+            <span>Mystery</span>
+            <input type="checkbox" name="genres[]" value="Mystery" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/romance.png' %}" alt="romance">
+            <span>Romance</span>
+            <input type="checkbox" name="genres[]" value="Romance" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/scifi.png' %}" alt="scifi">
+            <span>Science Fiction</span>
+            <input type="checkbox" name="genres[]" value="Science Fiction" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/thriller.png' %}" alt="thriller">
+            <span>Thriller</span>
+            <input type="checkbox" name="genres[]" value="Thriller" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/tv-movie.png' %}" alt="tv-movie">
+            <span>TV Movie</span>
+            <input type="checkbox" name="genres[]" value="TV Movie" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/war.png' %}" alt="war">
+            <span>War</span>
+            <input type="checkbox" name="genres[]" value="War" hidden>
+        </div>
+        <div class="genres-box">
+            <img src="{% static 'genres/western.png' %}" alt="western">
+            <span>Western</span>
+            <input type="checkbox" name="genres[]" value="Western" hidden>
+        </div>
         </div>
 
         <div class="submit-container">

@@ -1,6 +1,30 @@
+import pickle
+import numpy as np
 import pandas as pd
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
+from sklearn.metrics.pairwise import cosine_similarity
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login as auth_login
+from .models import UserProfile
+from .forms import CustomUserCreationForm
+
+from transformers import AutoTokenizer, AutoModel
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+# โหลด Tokenizer และ Model
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = AutoModel.from_pretrained("bert-base-uncased")
+
+
+# ฟังก์ชันสำหรับแปลงข้อความเป็นเวกเตอร์
+def get_embeddings(text):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1)
+
 
 # Genre mapping dictionary
 GENRE_MAPPING = {
@@ -26,18 +50,51 @@ GENRE_MAPPING = {
 }
 
 
+# Sign Up Function
+def signup(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)  # ใช้ CustomUserCreationForm
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)  # Login after signup
+            return redirect('preferences')  # Redirect to preferences page
+    else:
+        form = CustomUserCreationForm()  # ใช้ CustomUserCreationForm
+    return render(request, 'signup.html', {'form': form})
+
+
+# Login Function
+def custom_login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+
+            # Check if first login
+            user_profile, created = UserProfile.objects.get_or_create(user=user)
+            if user_profile.is_first_login:
+                user_profile.is_first_login = False
+                user_profile.save()
+                return redirect('preferences')
+            return redirect('homepage')  # Redirect to homepage on subsequent logins
+    else:
+        form = AuthenticationForm()
+    return render(request, 'login.html', {'form': form})
+
+
+# Preferences Function
+@login_required
 def preferences(request):
     if request.method == "POST":
-        # Extract selected preferences from POST data
         selected_preferences = request.POST.getlist('genres[]')
-
-        # Save preferences to the session
         request.session['preferences'] = selected_preferences
-
-        # Redirect to the recommendations page
+        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile.preferences = selected_preferences
+        user_profile.save()
         return redirect('recommend')
-
     return render(request, 'preference.html')
+
 
 @csrf_exempt
 def recommend(request):
@@ -93,3 +150,9 @@ def recommend(request):
 
     # If it's a GET request or invalid method, redirect to preferences
     return redirect('preferences')
+
+
+# Homepage Function
+@login_required
+def homepage(request):
+    return render(request, 'homepage.html')

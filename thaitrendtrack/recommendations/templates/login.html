@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Log in / ThaiTrendTrack</title>
+        <link rel="stylesheet" href="/homepage.css">
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200&family=Roboto+Condensed&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=search" rel="stylesheet">
+        <style>
+
+            body {
+                margin: 0;
+                background-color: white;
+                font-family: 'Poppins', sans-serif;
+            }
+
+            .flex {
+                display: flex;
+            }
+
+            .center {
+                justify-content: center;
+                text-align: center;
+                align-items: center;
+            }
+
+            .black-text {
+                color: black;
+            }
+
+            .white-text {
+                color: white;
+            }
+
+            .red-text {
+                color: #DC0856;
+            }
+
+            .margin0 {
+                margin: 0;
+            }
+
+            .main {
+                position: absolute;
+                width: 100%;
+                align-items: center;
+                top: 55px;
+                bottom: 0;
+                margin: auto 0;
+                display: grid;
+                grid-template-columns: 1fr 1fr 414.3px 1fr;
+            }
+
+            nav {
+                /*position: fixed;*/
+                width: 100%;
+                height: 90px;
+                display: flex;
+                justify-content: space-between;
+                background-color: white;
+                padding: 0 10px;
+            }
+
+            .logo {
+                text-align: center;
+            }
+
+            .logo img {
+                width: 110px;
+                height: auto;
+                padding-top: 95px;
+                padding-left: 845px;
+            }
+
+            .stuff img {
+                width: 325px;
+                height: auto;
+                margin-bottom: 100px;
+            }
+
+            .login-box {
+                padding-left: 30px;
+            }
+
+            .welcome-text {
+                font-size: 30px;
+                font-weight: 900;
+                margin-top: 1px;
+            }
+
+            .fans-text {
+                font-size: 25px;
+                font-weight: 900;
+                margin: 5px 0 20px 0;
+            }
+
+            input[type=text],[type=password] {
+                position: relative;
+                background-color: white;
+                width: 300px;
+                height: 40px;
+                padding-left: 20px;
+                font-family: 'Poppins', sans-serif;
+                font-size: 15px;
+                border-radius: 10px;
+            }
+
+            .password input {
+                margin-top: 20px;
+            }
+
+            .about-pw {
+                justify-content: center;
+            }
+
+            .error-message p {
+                color: #DC0856; /* Red color for error text */
+                text-align: center;
+            }
+
+            .forget-pw-link li {
+                list-style-type: none;
+                /*margin-top: 1rem;*/
+                margin-top: 30px;
+                margin-left: 45px;
+                /*margin-bottom: 1rem;*/
+
+            }
+
+            .forget-pw-link a {
+                color: black;
+                list-style-type: none;
+                text-decoration: none;
+            }
+
+            .forget-pw-link a:hover {
+                color: #DC0856;
+            }
+
+            form button {
+                background-color: #DC0856;
+                border-color: #DC0856;
+                width: 325px;
+                height: 40px;
+                color: white;
+                font-size: 15px;
+                font-family: 'Poppins', sans-serif;
+                border-radius: 10px;
+                margin:  20px 0;
+            }
+
+            .signup {
+                margin-bottom: 50px;
+                justify-content: space-between;
+            }
+
+            .signup ul {
+                padding-left: 10px;
+            }
+
+            .sign-up-link li {
+                list-style-type: none;
+                padding-inline-start: 0;
+                margin-top: 30px;
+                margin-right: 40px;
+            }
+
+            .sign-up-link a {
+                color: #DC0856;
+                text-decoration: 0;
+            }
+
+            .sign-up-link a:hover {
+                color: black;
+            }
+
+            .google-login {
+                display: flex;
+                justify-content: flex-start;
+            }
+
+            .google-login button {
+                width: 101%;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                color: white;
+                background-color: black;
+                border-radius: 10px;
+                font-family: 'Poppins', sans-serif;
+                font-size: 15px;
+                border-color: white;
+                margin-left: 1px;
+                padding-left: 10px;
+            }
+
+            .google-login svg {
+                width: 20px;
+                height: 20px;
+                /*padding-right: 15px;*/
+                margin-right: 10px;
+            }
+
+        </style>
+    </head>
+    <body>
+        <nav>
+            <div class="logo">
+                <a href="/homepage.css">
+                  <img src="/static/logo/TTT-logo1.png" alt="logo">
+                </a>
+            </div>
+        </nav>
+        <div class="main center">
+            <div class="empty"></div>
+            <div class="stuff">
+                <img src="/static/icons/clapboard.png" alt="stuff">
+            </div>
+            <div class="login flex center">
+                <div class="login-box">
+                    <div>
+                        <p class="welcome-text red-text margin0">WELCOME BACK TO</p>
+                        <p class="fans-text black-text">THAITRENDTRACK</p>
+                    </div>
+                    <form method="post" action="{% url 'login' %}" class="margin0">
+                        {% csrf_token %}
+                        <div class="username">
+                            <input type="text" name="username" placeholder="username" required>
+                        </div>
+                        <div class="password">
+                            <input type="password" name="password" placeholder="password" required>
+                        </div>
+<!--                            <div class="error-message">-->
+<!--                                <p class="red-text">Invalid username or password.</p>-->
+<!--                            </div>-->
+                        <button type="submit" class="white-text">Login</button>
+                    </form>
+                </div>
+            </div>
+            <div class="empty"></div>
+        </div>
+    </body>
+</html>
