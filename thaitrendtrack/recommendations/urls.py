@@ -11,5 +11,8 @@ urlpatterns = [
     path('', views.signup, name='signup'),
     path('homepage/', views.homepage, name='homepage'),
     path('admin/', admin.site.urls),
+    path('movies/', views.movies, name='movies'),
+    path('series/', views.series, name='series'),
+    path('drama/', views.drama, name='drama'),
 ]
 

@@ -51,15 +51,29 @@ GENRE_MAPPING = {
 
 
 # Sign Up Function
+# def signup(request):
+#     if request.method == 'POST':
+#         form = CustomUserCreationForm(request.POST)  # ใช้ CustomUserCreationForm
+#         if form.is_valid():
+#             user = form.save()
+#             auth_login(request, user)  # Login after signup
+#             return redirect('preferences')  # Redirect to preferences page
+#     else:
+#         form = CustomUserCreationForm()  # ใช้ CustomUserCreationForm
+#     return render(request, 'signup.html', {'form': form})
 def signup(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)  # ใช้ CustomUserCreationForm
+        form = CustomUserCreationForm(request.POST)  # Use CustomUserCreationForm
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)  # Login after signup
+            # auth_login(request, user)  # Login after signup
+
+            # Explicitly create the UserProfile after user creation
+            UserProfile.objects.get_or_create(user=user)
+
             return redirect('preferences')  # Redirect to preferences page
     else:
-        form = CustomUserCreationForm()  # ใช้ CustomUserCreationForm
+        form = CustomUserCreationForm()  # Use CustomUserCreationForm
     return render(request, 'signup.html', {'form': form})
 
 
@@ -156,3 +170,15 @@ def recommend(request):
 @login_required
 def homepage(request):
     return render(request, 'homepage.html')
+
+
+def movies():
+    return None
+
+
+def series():
+    return None
+
+
+def drama():
+    return None
