@@ -121,7 +121,8 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "recommendations/templates/static"]
+STATICFILES_DIRS = [BASE_DIR / "recommendations/templates/static",
+                    BASE_DIR / "static"]
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/homepage/'
