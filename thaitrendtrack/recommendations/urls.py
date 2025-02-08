@@ -2,6 +2,7 @@ from django.urls import path, include
 from . import views
 from django.contrib.auth import views as auth_views
 from django.contrib import admin
+from .views import movie_detail
 
 urlpatterns = [
     path('preferences/', views.preferences, name='preferences'),
@@ -12,7 +13,6 @@ urlpatterns = [
     path('homepage/', views.homepage, name='homepage'),
     path('admin/', admin.site.urls),
     path('movies/', views.movies, name='movies'),
-    path('series/', views.series, name='series'),
-    path('drama/', views.drama, name='drama'),
+    path('movies/<int:movie_id>/', movie_detail, name='movie_detail'),
 ]
 
