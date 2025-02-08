@@ -3,6 +3,7 @@
    <head>
         <meta charset="UTF-8">
         <title>Detail / Movies / ThaiTrendTrack</title>
+        {% load static %}
         <link rel="stylesheet" href="homepage.css">
         <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200&family=Roboto+Condensed&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=search" rel="stylesheet">
@@ -444,16 +445,15 @@
                        <img src="{{ movie.poster_path }}" alt="Movie Image">
                    </div>
                    <div class="detail flex">
-                       <p class="name title black-text">{{ movie.english_title }}</p>
+                       <p class="name title black-text">{{ movie.title_en }}</p>
                        <div class="icons">
                            <img src="static/icons/translate.png" alt="trans-icon" class="trans-icon">
-                           <a href="{% url '//' %}" class="bookmark-icon">
                                <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="black">
                                    <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
                                </svg>
                            </a>
                        </div>
-                       <p class="sub-name black-text">{{ movie.thai_title }}</p>
+                       <p class="sub-name black-text">{{ movie.title_th }}</p>
                        <p class="description black-text">{{ movie.release_date|date:"Y" }} | {{ movie.genres }} | {{ movie.runtime }}</p>
                        <p class="overview black-text">{{ movie.description }}</p>
                        <div class="comment-section">

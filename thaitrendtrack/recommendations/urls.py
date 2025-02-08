@@ -12,7 +12,6 @@ urlpatterns = [
     path('', views.signup, name='signup'),
     path('homepage/', views.homepage, name='homepage'),
     path('admin/', admin.site.urls),
-    path('movies/', views.movies, name='movies'),
-    path('movies/<int:movie_id>/', movie_detail, name='movie_detail'),
+    path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'),
 ]
 
