@@ -440,22 +440,40 @@
        <div class="main">
            <div class="empty"></div>
            <div class="content">
-               <section class="movie white-text">
-                   <div class="movie-img">
-                       <img src="{{ movie.poster_path }}" alt="Movie Image">
-                   </div>
-                   <div class="detail flex">
-                       <p class="name title black-text">{{ movie.title_en }}</p>
-                       <div class="icons">
-                           <img src="static/icons/translate.png" alt="trans-icon" class="trans-icon">
-                               <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="black">
-                                   <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
-                               </svg>
-                           </a>
-                       </div>
-                       <p class="sub-name black-text">{{ movie.title_th }}</p>
-                       <p class="description black-text">{{ movie.release_date|date:"Y" }} | {{ movie.genres }} | {{ movie.runtime }}</p>
-                       <p class="overview black-text">{{ movie.description }}</p>
+            <section class="movie white-text">
+                <div class="movie-img">
+                    <img src="{{ movie.poster_path }}" alt="Movie Image">
+                </div>
+                <div class="detail flex">
+                    <p class="name title black-text">{{ movie.title_en }}</p>
+                    <div class="icons">
+                        <select id="languageSelect" class="lang-dropdown">
+                            <option value="en">English</option>
+                            <option value="th">Thai</option>
+                            <option value="ja">Japanese</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="es">Spanish</option>
+                            <option value="zh-CN">Chinese (Simplified)</option>
+                            <option value="zh-TW">Chinese (Traditional)</option>
+                            <option value="ko">Korean</option>
+                            <option value="ru">Russian</option>
+                            <option value="it">Italian</option>
+                            <option value="ar">Arabic</option>
+                            <option value="hi">Hindi</option>
+                            <option value="pt">Portuguese</option>
+                        </select>
+                        {% load static %}
+                        <img id="translateButton" src="{% static 'icons/translate.png' %}" alt="trans-icon" class="trans-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="black">
+                            <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
+                        </svg>
+                    </div>
+                    <p class="sub-name black-text">{{ movie.title_th }}</p>
+                    <p id="movieDetails" class="description black-text">
+                    {{ movie.release_date|date:"Y" }} | {{ movie.genres }} | {{ movie.runtime }}
+                    </p>
+                    <div id="movieOverview" class="overview black-text">{{ movie.description }}</div>
                        <div class="comment-section">
                            <div class="comment-title">
                                <div class="stats">
@@ -634,5 +652,26 @@
             });
         });
        </script>
+       <script>
+        document.getElementById("translateButton").addEventListener("click", function () {
+            let textOverview = document.getElementById("movieOverview").innerText;
+            let textDetails = document.getElementById("movieDetails").innerText;
+            let selectedLang = document.getElementById("languageSelect").value; // Get selected language
+
+            function translateText(text, elementId) {
+                fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${selectedLang}&dt=t&q=${encodeURIComponent(text)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById(elementId).innerText = data[0].map(item => item[0]).join("");
+                    })
+                    .catch(error => console.error("Translation error:", error));
+            }
+
+            // Translate both sections
+            translateText(textOverview, "movieOverview");
+            translateText(textDetails, "movieDetails");
+        });
+    </script>
+
    </body>
 </html>
