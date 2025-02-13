@@ -180,142 +180,35 @@
 
         <section class="movies-content">
             <div class="movies-container">
-                <!-- Movie Card -->
-                <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{% static 'posters/poster_m1.jpg' %}" alt="Movie Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="movie-title">Movie Title 1</p>
-                    <p class="movie-subtitle">SubTitle 1</p>
-                    <p class="movie-year">2024
+            {% for movie in movies %}
+            <div class="movie-card">
+                <div class="movie-image">
+                    <img src="{{ movie.poster_path }}" alt="{{ movie.title_en }} Poster">
+                    <button class="heart-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="movie-title">{{ movie.title_en }}</p>
+                <p class="movie-subtitle">{{ movie.title_th }}</p>
+                <p class="movie-year">{{ movie.release_date|date:"Y" }}
                     <span class="icon heart-count">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                         </svg>
-                        <span class="count">789</span>
+                        <span class="count">{{ movie.popularity }}</span>
                     </span>
                     <span class="icon engagement-count">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
                             <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
                         </svg>
-                        <span class="count">1.5k</span>
+                        <span class="count">{{ movie.engagement }}</span>
                     </span>
-                    </p>
-                </div>
-
-                <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{% static 'posters/poster_m1.jpg' %}" alt="Movie Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="movie-title">Movie Title 2</p>
-                    <p class="movie-subtitle">SubTitle 2</p>
-                    <p class="movie-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{% static 'posters/poster_m1.jpg' %}" alt="Movie Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="movie-title">Movie Title 3</p>
-                    <p class="movie-subtitle">SubTitle 3</p>
-                    <p class="movie-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                 <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{% static 'posters/poster_m1.jpg' %}" alt="Movie Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="movie-title">Movie Title 4</p>
-                     <p class="movie-subtitle">SubTitle 4</p>
-                    <p class="movie-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                 <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{% static 'posters/poster_m1.jpg' %}" alt="Movie Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="movie-title">Movie Title 5</p>
-                    <p class="movie-subtitle">SubTitle 5</p>
-                    <p class="movie-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
+                </p>
             </div>
+            {% endfor %}
+        </div>
         </section>
 
         <section class="series-content">

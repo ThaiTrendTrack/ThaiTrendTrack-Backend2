@@ -1,3 +1,4 @@
+import numpy as np
 from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -35,10 +36,10 @@ def movie_detail(request, movie_id):
 
 
 # Function to convert text to embeddings
-def get_embeddings(text):
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-    outputs = model(**inputs)
-    return outputs.last_hidden_state.mean(dim=1)
+# def get_embeddings(text):
+#     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+#     outputs = model(**inputs)
+#     return outputs.last_hidden_state.mean(dim=1)
 
 
 # # Genre mapping dictionary
@@ -129,7 +130,7 @@ def preferences(request):
         selected_preferences = request.POST.getlist('genres[]')
 
         # Debug: Log the received preferences
-        print(f"Selected Preferences: {selected_preferences}")
+        # print(f"Selected Preferences: {selected_preferences}")
 
         # Save preferences to the session
         request.session['preferences'] = selected_preferences
@@ -141,7 +142,7 @@ def preferences(request):
             user_profile.save()
 
             # Debug: Confirm saving in the database
-            print(f"Preferences saved: {user_profile.preferences}")
+            # print(f"Preferences saved: {user_profile.preferences}")
 
         except UserProfile.DoesNotExist:
             print("UserProfile not found for the user!")
@@ -219,7 +220,80 @@ def recommend(request):
     return redirect('preferences')
 
 
+# Function to generate text embeddings
+def get_embeddings(text):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).detach().numpy()
+
+
+# Function to handle movie search
+def search_movies(request):
+    if request.method == "GET":
+        query = request.GET.get("searchQuery", "").strip()
+        if not query:
+            return render(request, "movies.html", {"movies": []})
+
+        user_embedding = get_embeddings(query)
+
+        # Fetch all movies from the database
+        movies = Movie.objects.all()
+
+        # Compute similarity scores
+        movie_data = []
+        for movie in movies:
+            movie_embedding = get_embeddings(movie.description) if movie.description else np.zeros((1, 768))
+            similarity_score = cosine_similarity(user_embedding, movie_embedding).flatten()[0]
+            movie_data.append((movie, similarity_score))
+
+        # Sort movies by similarity score
+        movie_data.sort(key=lambda x: x[1], reverse=True)
+        recommended_movies = [
+            {"title_en": m.title_en, "title_th": m.title_th, "similarity": s, "description": m.description} for m, s in
+            movie_data[:10]]
+
+        return render(request, "movies.html", {"movies": recommended_movies})
+
+
+def recommend_movies(request):
+    if request.method == "GET":
+        query = request.GET.get("searchQuery", "").strip()
+        if not query:
+            return render(request, "recommend.html", {"movies": []})  # Redirect to recommend.html
+
+        user_embedding = get_embeddings(query)
+
+        # Fetch all movies
+        movies = Movie.objects.all()
+
+        # Compute similarity scores
+        movie_data = []
+        for movie in movies:
+            if movie.description:
+                movie_embedding = get_embeddings(movie.description)
+            else:
+                movie_embedding = np.zeros((1, user_embedding.shape[1]))  # Ensure correct shape
+
+            similarity_score = cosine_similarity(user_embedding, movie_embedding).flatten()[0]
+            movie_data.append((movie, similarity_score))
+
+        # Sort movies by similarity
+        movie_data.sort(key=lambda x: x[1], reverse=True)
+        recommended_movies = [
+            {
+                "title_en": m.title_en,
+                "title_th": m.title_th,
+                "similarity": round(s, 3),
+                "description": m.description
+            }
+            for m, s in movie_data[:10]
+        ]
+
+        return render(request, "recommend.html", {"movies": recommended_movies})  # Use recommend.html
+
+
 # Homepage Function
 @login_required
 def homepage(request):
-    return render(request, 'homepage.html')
+    movies = Movie.objects.all().order_by('-popularity')[:10]  # ดึงมาแค่ 10 เรื่อง
+    return render(request, 'homepage.html', {'movies': movies})
