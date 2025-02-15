@@ -30,6 +30,15 @@ model = AutoModel.from_pretrained("bert-base-uncased")
 #     }
 #     return JsonResponse(data)
 
+
+def login_view(request):
+    return render(request, 'login.html')
+
+
+def signup_view(request):
+    return render(request, 'signup.html')
+
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     return render(request, 'movies_detailed.html', {'movie': movie})
