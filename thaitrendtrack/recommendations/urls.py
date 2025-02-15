@@ -8,8 +8,8 @@ from .views import movie_detail, search_movies, recommend_movies
 urlpatterns = [
     path('preferences/', views.preferences, name='preferences'),
     path('recommend/', views.recommend, name='recommend'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/', views.login_view, name='login'),
+    path('signup/', views.login_view, name='signup'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('', views.signup, name='signup'),
     path('homepage/', views.homepage, name='homepage'),

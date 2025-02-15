@@ -496,24 +496,19 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Load the external navbar
-            fetch("{% static 'components/side_header.html' %}")
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById('navbar-placeholder').innerHTML = data;
-                })
-                .catch(error => console.error('Error loading navbar:', error));
+            fetch("{% static 'components/side_header.html' %}?v=" + new Date().getTime())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log("Loaded Navbar Content:", data);  // ✅ Debug ดูข้อมูลที่โหลดมา
+                document.getElementById('navbar-placeholder').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
 
-            // Add click event to toggle the heart state
-            document.querySelectorAll('.heart-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    button.classList.toggle('filled');
-                });
-            });
 
             // Carousel controls
             const carousel = document.getElementById('genre-carousel');
