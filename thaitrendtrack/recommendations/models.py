@@ -32,11 +32,10 @@ import numpy as np
 from transformers import AutoTokenizer, AutoModel
 import torch
 
-# ✅ Load BERT Model (Multilingual for Thai Support)
+# ✅ Load Multilingual BERT Model
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
 model = AutoModel.from_pretrained("bert-base-multilingual-cased")
 model.eval()
-
 
 def get_bert_embedding(text):
     """Generate BERT embeddings for Thai & English text."""
@@ -48,23 +47,23 @@ def get_bert_embedding(text):
         outputs = model(**inputs)
     return outputs.last_hidden_state.mean(dim=1).numpy().reshape(1, -1).tolist()  # ✅ Ensure correct format
 
-
 class Movie(models.Model):
     title_en = models.CharField(max_length=255)
     title_th = models.CharField(max_length=255, blank=True, null=True)
     release_date = models.DateField(null=True, blank=True)
     description = models.TextField()
     poster_path = models.URLField()
-    genres = models.JSONField(default=list)
+    genres = models.JSONField(default=list)  # ✅ Store genres as a list
     runtime = models.CharField(max_length=50, blank=True, null=True)
-    popularity = models.FloatField(blank=True, null=True)  # If you want to store popularity as a float
+    popularity = models.FloatField(blank=True, null=True)
     vote_average = models.FloatField(blank=True, null=True)
     embedding = models.TextField(blank=True, null=True)  # ✅ Store embeddings as JSON
 
     def save(self, *args, **kwargs):
-        """Force embedding creation when saving a movie."""
-        if not self.embedding and self.description:  # ✅ Only generate if it's missing
-            print(f"Generating embedding for: {self.title_en}")  # ✅ Debug log
-            embedding_vector = get_bert_embedding(self.description)
+        """Generate embeddings using multiple factors: title, genres, and description."""
+        if not self.embedding:
+            combined_text = f"{self.title_en} {self.title_th} {' '.join(self.genres)} {self.description}"
+            print(f"🔄 Generating embedding for: {self.title_en}")  # ✅ Debugging log
+            embedding_vector = get_bert_embedding(combined_text)
             self.embedding = json.dumps(embedding_vector)  # ✅ Store JSON format
         super().save(*args, **kwargs)  # ✅ Call Django's original save()

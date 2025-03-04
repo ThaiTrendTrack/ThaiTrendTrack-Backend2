@@ -13,28 +13,56 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .models import Movie
 import json
 
-# ✅ Use Multilingual BERT (for Thai & English support)
+from django.shortcuts import render
+from transformers import AutoTokenizer, AutoModel
+import torch
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from .models import Movie
+import json
+
+from django.shortcuts import render
+from transformers import AutoTokenizer, AutoModel
+import torch
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from .models import Movie
+import json
+
+# ✅ Use Multilingual BERT for Thai & English
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
 model = AutoModel.from_pretrained("bert-base-multilingual-cased")
 model.eval()
 
-
 def get_bert_embedding(text):
     """Generate BERT embeddings for Thai & English text."""
     if not text or text.strip() == "":
-        return np.zeros((1, 768)).tolist()  # ✅ Return zero vector if no text
+        return np.zeros((1, 768)).tolist()
 
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
-    return outputs.last_hidden_state.mean(dim=1).numpy().reshape(1, -1).tolist()  # ✅ Ensure correct shape
-
+    return outputs.last_hidden_state.mean(dim=1).numpy().reshape(1, -1).tolist()
 
 def definition_movies(request):
     query_text = request.GET.get("searchQuery", "").strip()
 
     if not query_text:
         return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
+
+    print(f"🔎 Searching for: {query_text}")
+
+    # ✅ Expand the query with synonyms
+    query_expansion = {
+        "น่ารัก": "น่ารัก หวานๆ โรแมนติก สนุก",
+        "ตลก": "ตลก สนุก ฮาๆ คอมเมดี้",
+        "แอคชั่น": "แอคชั่น ต่อสู้ ระเบิด ความมันส์"
+    }
+    for word, expansion in query_expansion.items():
+        if word in query_text:
+            query_text += f" {expansion}"
+
+    print(f"📝 Expanded Query: {query_text}")
 
     # ✅ Convert query text to embedding
     query_embedding = np.array(get_bert_embedding(query_text)).reshape(1, -1)
@@ -47,24 +75,24 @@ def definition_movies(request):
 
     for movie in movies:
         if movie.embedding:
-            emb = np.array(json.loads(movie.embedding)).reshape(1, -1)  # ✅ Ensure correct shape
+            emb = np.array(json.loads(movie.embedding)).reshape(1, -1)
             movie_embeddings.append(emb)
             movie_list.append(movie)
 
-    # ✅ If no movies have embeddings, return random movies
     if len(movie_embeddings) == 0:
-        return render(request, "definition_movies.html",
-                      {"movies": Movie.objects.all()[:5], "search_query": query_text})
+        print("⚠️ No movie embeddings found! Returning empty results.")
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
 
-    movie_embeddings = np.vstack(movie_embeddings)  # ✅ Convert to NumPy array
+    movie_embeddings = np.vstack(movie_embeddings)
+    print(f"✅ Movie Embeddings Shape: {movie_embeddings.shape}")
 
     # ✅ Compute cosine similarity
     similarities = cosine_similarity(query_embedding, movie_embeddings).flatten()
+    print(f"✅ Similarities: {similarities}")
 
-    # ✅ Adjust similarity threshold
-    ranked_movies = sorted(zip(movie_list, similarities), key=lambda x: x[1], reverse=True)
+    # ✅ Only return highly relevant results
+    ranked_movies = sorted(zip(movie_list, similarities), key=lambda x: x[1], reverse=True)[:5]
 
-    # ✅ Allow movies with at least **0.1 similarity** (instead of strict matching)
     recommended_movies = [
         {
             "id": m.id,
@@ -72,23 +100,14 @@ def definition_movies(request):
             "title_th": m.title_th,
             "release_date": m.release_date,
             "poster_path": m.poster_path
-        } for m, sim in ranked_movies if sim > 0.1  # ✅ Lower threshold to 0.1
+        } for m, sim in ranked_movies if sim > 0.3  # ✅ Increased threshold to 0.3
     ]
 
-    # ✅ If no movies match, return random top 5
     if not recommended_movies:
-        recommended_movies = [
-            {
-                "id": m.id,
-                "title_en": m.title_en,
-                "title_th": m.title_th,
-                "release_date": m.release_date,
-                "poster_path": m.poster_path
-            } for m in Movie.objects.all()[:5]  # ✅ Show 5 random movies instead
-        ]
+        print("⚠️ No similar movies found. Returning empty results.")
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
 
     return render(request, "definition_movies.html", {"movies": recommended_movies, "search_query": query_text})
-
 
 # def movie_detail(request, movie_id):
 #     movie = get_object_or_404(Movie, id=movie_id)
