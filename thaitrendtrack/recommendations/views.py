@@ -1,23 +1,93 @@
-import numpy as np
-from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from .models import UserProfile, Movie
 from .forms import CustomUserCreationForm
-from transformers import AutoTokenizer, AutoModel
 from datetime import datetime
-from django.db.models import Q
+from django.shortcuts import render
+from transformers import AutoTokenizer, AutoModel
 import torch
+import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from .models import Movie
+import json
 
-from django.http import JsonResponse
+# ✅ Use Multilingual BERT (for Thai & English support)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
+model = AutoModel.from_pretrained("bert-base-multilingual-cased")
+model.eval()
 
-# Load Tokenizer and Model
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-model = AutoModel.from_pretrained("bert-base-uncased")
+
+def get_bert_embedding(text):
+    """Generate BERT embeddings for Thai & English text."""
+    if not text or text.strip() == "":
+        return np.zeros((1, 768)).tolist()  # ✅ Return zero vector if no text
+
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).numpy().reshape(1, -1).tolist()  # ✅ Ensure correct shape
+
+
+def definition_movies(request):
+    query_text = request.GET.get("searchQuery", "").strip()
+
+    if not query_text:
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
+
+    # ✅ Convert query text to embedding
+    query_embedding = np.array(get_bert_embedding(query_text)).reshape(1, -1)
+
+    # ✅ Fetch movies with embeddings from the database
+    movies = Movie.objects.exclude(embedding__isnull=True)
+
+    movie_embeddings = []
+    movie_list = []
+
+    for movie in movies:
+        if movie.embedding:
+            emb = np.array(json.loads(movie.embedding)).reshape(1, -1)  # ✅ Ensure correct shape
+            movie_embeddings.append(emb)
+            movie_list.append(movie)
+
+    # ✅ If no movies have embeddings, return random movies
+    if len(movie_embeddings) == 0:
+        return render(request, "definition_movies.html",
+                      {"movies": Movie.objects.all()[:5], "search_query": query_text})
+
+    movie_embeddings = np.vstack(movie_embeddings)  # ✅ Convert to NumPy array
+
+    # ✅ Compute cosine similarity
+    similarities = cosine_similarity(query_embedding, movie_embeddings).flatten()
+
+    # ✅ Adjust similarity threshold
+    ranked_movies = sorted(zip(movie_list, similarities), key=lambda x: x[1], reverse=True)
+
+    # ✅ Allow movies with at least **0.1 similarity** (instead of strict matching)
+    recommended_movies = [
+        {
+            "id": m.id,
+            "title_en": m.title_en,
+            "title_th": m.title_th,
+            "release_date": m.release_date,
+            "poster_path": m.poster_path
+        } for m, sim in ranked_movies if sim > 0.1  # ✅ Lower threshold to 0.1
+    ]
+
+    # ✅ If no movies match, return random top 5
+    if not recommended_movies:
+        recommended_movies = [
+            {
+                "id": m.id,
+                "title_en": m.title_en,
+                "title_th": m.title_th,
+                "release_date": m.release_date,
+                "poster_path": m.poster_path
+            } for m in Movie.objects.all()[:5]  # ✅ Show 5 random movies instead
+        ]
+
+    return render(request, "definition_movies.html", {"movies": recommended_movies, "search_query": query_text})
 
 
 # def movie_detail(request, movie_id):

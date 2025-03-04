@@ -3,7 +3,7 @@ from django.urls import path, include
 from . import views
 from django.contrib.auth import views as auth_views
 from django.contrib import admin
-from .views import movie_detail, search_movies, recommend_movies, custom_login
+from .views import movie_detail, search_movies, recommend_movies, custom_login, definition_movies
 
 urlpatterns = [
     path('preferences/', views.preferences, name='preferences'),
@@ -15,6 +15,8 @@ urlpatterns = [
     path('homepage/', views.homepage, name='homepage'),
     path('admin/', admin.site.urls),
     path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'),
-    path("recommend/", recommend_movies, name="recommend")
+    # path("recommend/", recommend_movies, name="recommend"),
+    path("recommend/", recommend_movies, name="recommend"),
+    path("definition-movies/", definition_movies, name="definition_movies")
 ]
 

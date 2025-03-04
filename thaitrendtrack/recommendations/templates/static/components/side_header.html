@@ -258,7 +258,7 @@
         </div>
         <div class="menu">
           <ul>
-            <li class="menu-text"><a href="{% url 'home' %}">Home</a></li>
+            <li class="menu-text"><a href="{/login/}">Home</a></li>
             <li class="menu-text"><a href="{% url 'movies' %}">Movies</a></li>
             <li class="menu-text"><a href="{% url 'series' %}">Series</a></li>
             <li class="menu-text"><a href="{% url 'drama' %}">Drama</a></li>
@@ -283,23 +283,49 @@
 <!--                </button>-->
 <!--            </div>-->
 <!--        </form>-->
-        <form action="{% url 'recommend' %}" method="get">
-        <div class="search-container">
-            <label>
-                <select class="dropdown" id="category" name="category">
-                    <option value="" selected disabled>Select</option>
-                    <option value="definition">Definition</option>
-                    <option value="cast">Cast</option>
-                    <option value="status">Status</option>
-                    <option value="platform">Platform</option>
-                </select>
-            </label>
-            <input type="text" class="search-input" id="searchQuery" name="searchQuery" placeholder="Search..." required>
-            <button type="submit" class="search-button">
-                <span class="material-symbols-outlined">search</span>
-            </button>
-        </div>
-    </form>
+<!--        <form action="{% url 'recommend' %}" method="get">-->
+<!--        <div class="search-container">-->
+<!--            <label>-->
+<!--                <select class="dropdown" id="category" name="category">-->
+<!--                    <option value="" selected disabled>Select</option>-->
+<!--                    <option value="definition">Definition</option>-->
+<!--                    <option value="cast">Cast</option>-->
+<!--                    <option value="status">Status</option>-->
+<!--                    <option value="platform">Platform</option>-->
+<!--                </select>-->
+<!--            </label>-->
+<!--            <input type="text" class="search-input" id="searchQuery" name="searchQuery" placeholder="Search..." required>-->
+<!--            <button type="submit" class="search-button">-->
+<!--                <span class="material-symbols-outlined">search</span>-->
+<!--            </button>-->
+<!--        </div>-->
+<!--    </form>-->
+        <form action="/definition-movies/" method="get" id="search-form">
+    <div class="search-container">
+        <label>
+            <select class="dropdown" id="category" name="category" required>
+                <option value="definition" selected>Definition</option>  <!-- Auto-selected -->
+            </select>
+        </label>
+        <input type="text" class="search-input" id="searchQuery" name="searchQuery" placeholder="Search..." required>
+        <button type="submit" class="search-button">
+            <span class="material-symbols-outlined">search</span>
+        </button>
+    </div>
+</form>
+
+<script>
+    document.getElementById("search-form").addEventListener("submit", function(event) {
+        const query = document.getElementById("searchQuery").value.trim();
+
+        if (!query) {
+            alert("Please enter a search term.");
+            event.preventDefault();  // Prevent form submission if empty
+        }
+    });
+</script>
+
+
 
 
       <div class="nav-icons">
