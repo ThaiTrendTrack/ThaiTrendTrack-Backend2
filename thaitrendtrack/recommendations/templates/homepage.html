@@ -91,24 +91,25 @@
 
                         <!-- Carousel List -->
                         <ul class="carousel" id="genre-carousel">
-                            <li class="card genre-item"><a href="#"><span>Action</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Adventure</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Animation</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Comedy</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Crime</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Documentary</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Drama</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Fantasy</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>History</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Horror</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Music</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Mystery</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Romance</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Sci-Fi</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Thriller</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>TV Movie</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>War</span></a></li>
-                            <li class="card genre-item"><a href="#"><span>Western</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Action' %}"><span>Action</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Adventure' %}"><span>Adventure</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Animation' %}"><span>Animation</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Comedy' %}"><span>Comedy</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Crime' %}"><span>Crime</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Documentary' %}"><span>Documentary</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Drama' %}"><span>Drama</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Family' %}"><span>Family</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Fantasy' %}"><span>Fantasy</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'History' %}"><span>History</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Horror' %}"><span>Horror</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Music' %}"><span>Music</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Mystery' %}"><span>Mystery</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Romance' %}"><span>Romance</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Science Fiction' %}"><span>Science Fiction</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'TV Movie' %}"><span>TV Movie</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Thriller' %}"><span>Thriller</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'War' %}"><span>War</span></a></li>
+                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Western' %}"><span>Western</span></a></li>
                         </ul>
 
                         <!-- Right Arrow -->
@@ -137,8 +138,8 @@
                  </a>
              </p>
 
-             <p class="black-text ct-text" style="padding-left: 235px; margin-top: 350px">
-                 <a href="{% url 'homepage' %}" class="movie-link">Series
+             <p class="black-text ct-text" style="padding-left: 235px; margin-top: 50px">
+                 <a href="{% url 'homepage' %}" class="series-link">Series
                        <svg fill="#000000" height="22px" width="22px" class="arrow-icon" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                          viewBox="0 0 512 512" xml:space="preserve">
                          <g>
@@ -178,177 +179,42 @@
              </p>
          </div>
 
-        <section class="movies-content">
-            <div class="movies-container">
+           <section class="movies-content">
+<!--        <h2 class="section-title">Movies</h2>-->
+        <div class="movies-container">
             {% for movie in movies %}
-            <div class="movie-card">
-                <div class="movie-image">
-                    <img src="{{ movie.poster_path }}" alt="{{ movie.title_en }} Poster">
-                    <button class="heart-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </button>
+                <div class="movie-card">
+                    <div class="movie-image">
+                        <img src="{{ movie.poster_path }}" alt="{{ movie.title_en }} Poster">
+                    </div>
+                    <p class="movie-title">{{ movie.title_en }}</p>
+                    <p class="movie-subtitle">{{ movie.title_th }}</p>
+                    <p class="movie-year">{{ movie.release_date|date:"Y" }}</p>
                 </div>
-                <p class="movie-title">{{ movie.title_en }}</p>
-                <p class="movie-subtitle">{{ movie.title_th }}</p>
-                <p class="movie-year">{{ movie.release_date|date:"Y" }}
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">{{ movie.popularity }}</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">{{ movie.engagement }}</span>
-                    </span>
-                </p>
-            </div>
+            {% empty %}
+                <p>No movies available.</p>
             {% endfor %}
         </div>
         </section>
 
         <section class="series-content">
-            <div class="series-container">
+        <h2 class="section-title">TV Series</h2>
+        <div class="series-container">
+            {% for show in series %}
                 <div class="series-card">
                     <div class="series-image">
-                        <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
+                        <img src="{{ show.poster_path }}" alt="{{ show.title_en }} Poster">
                     </div>
-                    <p class="series-title">Series Title 1</p>
-                    <p class="series-subtitle">SubTitle 1</p>
-                    <p class="series-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
+                    <p class="series-title">{{ show.title_en }}</p>
+                    <p class="series-subtitle">{{ show.title_th }}</p>
+                    <p class="series-year">{{ show.release_date|date:"Y" }}</p>
                 </div>
+            {% empty %}
+                <p>No TV series available.</p>
+            {% endfor %}
+        </div>
+    </section>
 
-                <div class="series-card">
-                    <div class="series-image">
-                        <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="series-title">Series Title 2</p>
-                    <p class="series-subtitle">SubTitle 2</p>
-                    <p class="series-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                <div class="series-card">
-                    <div class="series-image">
-                        <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="series-title">Series Title 3</p>
-                    <p class="series-subtitle">SubTitle 3</p>
-                    <p class="series-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                <div class="series-card">
-                    <div class="series-image">
-                        <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="series-title">Series Title 4</p>
-                    <p class="series-subtitle">SubTitle 4</p>
-                    <p class="series-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-
-                <div class="series-card">
-                    <div class="series-image">
-                        <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Poster">
-                        <button class="heart-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="series-title">Series Title 5</p>
-                    <p class="series-subtitle">SubTitle 5</p>
-                    <p class="series-year">2024
-                    <span class="icon heart-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="count">789</span>
-                    </span>
-                    <span class="icon engagement-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M3 3h2v18H3zM9 7h2v14H9zM15 12h2v9h-2zM21 5h2v16h-2z"/>
-                        </svg>
-                        <span class="count">1.5k</span>
-                    </span>
-                    </p>
-                </div>
-            </div>
-        </section>
 
         <section class="drama-content">
             <div class="drama-container">
@@ -535,6 +401,11 @@
                 });
             }
         });
+    </script>
+
+    <script>
+        function openPopup() { document.getElementById("popupOverlay").style.display = "flex"; }
+        function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
     </script>
 </body>
 </html>
