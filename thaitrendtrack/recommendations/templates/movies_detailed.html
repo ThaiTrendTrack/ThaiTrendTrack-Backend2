@@ -1,0 +1,956 @@
+
+<!DOCTYPE html>
+<html>
+   <head>
+        <meta charset="UTF-8">
+        <title>Detail / Movies / ThaiTrendTrack</title>
+        <link rel="stylesheet" href="homepage.css">
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200&family=Roboto+Condensed&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=search" rel="stylesheet">
+   <style>
+       body {
+            margin: 0;
+            background-color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+
+       .white-text {
+            color: white;
+       }
+
+        .black-text {
+            color: black;
+        }
+
+        .center {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        li {
+            list-style-type: none;
+            text-decoration: none;
+        }
+
+        /* layout */
+
+        .main {
+            display: grid;
+            grid-template-columns: 2fr 10fr 2fr;
+            position: relative;
+            top: 60px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* section */
+
+        .flex {
+            display: flex;
+        }
+
+        .card-layout {
+            display: grid;
+            grid-template-columns: repeat(7, 150px);
+            gap: 12px;
+            margin-top: 1rem;
+            margin-block-end: 20px;
+        }
+
+        /* movie */
+
+        .count {
+            font-size: 18px;
+            margin-left: 14px;
+            margin-bottom: 2px;
+        }
+
+        .name {
+            font-weight: bolder;
+            font-size: 28px;
+        }
+
+        .sub-name {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .description {
+            margin: 12px 0;
+            font-size: 18px;
+        }
+
+        .overview {
+            margin: 16px 0;
+            font-size: 20px;
+        }
+
+        .movie {
+            height: 525px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            margin-top: 30px;
+            margin-bottom: 16px;
+        }
+
+        .movie img {
+            width: 350px;
+            height: auto;
+            object-fit: cover;
+            border-radius: 7px;
+        }
+
+        .detail {
+            /*flex-direction: column;*/
+            margin-left: 20px;
+            display: inline-block;
+            /*display: flex;*/
+            justify-content: space-between;
+            align-items: end;
+        }
+
+        .detail-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bolder;
+            margin: 0;
+        }
+
+        .icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icons a svg {
+            width: 32px;
+            height: 32px;
+            fill: black;
+            cursor: pointer;
+        }
+        .info-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .overview {
+            margin: 16px 0;
+            font-size: 18px;
+        }
+
+        .bookmark-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .bookmark-icon svg {
+            fill: #B3B3B3;
+            transition: fill 0.2s ease;
+        }
+
+        /* Color when active */
+        .bookmark-icon.active svg{
+            fill: #DC0856;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100px;
+            height: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+        }
+
+        .selected-lang {
+            width: 50px; /* Adjust for max language code */
+            text-align: center;
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 10px;
+        }
+
+        .dropdown-btn img {
+            width: 30px;
+            height: 30px;
+            margin-top: -10px;
+            margin-right: 10px;
+        }
+
+       .dropdown-list {
+            display: none;
+            height: 225px;
+            width: auto;
+            margin-top: 5px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: absolute;
+            left: 0;
+            background: white;
+            border-radius: 5px;
+            border: 1.5px solid #ccc;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+       .dropdown-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: black;
+            width: 100%;
+       }
+
+       .dropdown-list li img {
+            width: 20px;
+            height: 20px;
+            margin-left: -30px;
+            margin-right: 4px;
+       }
+
+       .dropdown-list li:hover {
+            background: #efefef;
+       }
+
+       /* ✅ Ensures the icon background also changes when hovered */
+       .dropdown-list li:hover img,
+       .dropdown-list li.selected img {
+            background: #efefef;
+       }
+
+        /* ✅ Show dropdown when active */
+        .dropdown-container.active .dropdown-list {
+            display: block;
+        }
+
+        .head {
+            display: flex;
+            font-weight: 0;
+            cursor: pointer;
+            align-items: end;
+        }
+
+        .title-name {
+            color: black;
+            position: absolute;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 111;
+            margin: 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold solid 3px;
+        }
+
+        /* fav */
+
+       .comment-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+       }
+
+       .fav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+
+       }
+
+       .fav svg {
+            width: 32px;
+            height: 32px;
+            fill: #B3B3B3;
+            transition: fill 0.2s ease;
+       }
+
+       .fav.is-favorite svg {
+            fill: #DC0856;
+       }
+
+
+       .fav:hover {
+            background-color: transparent;
+            transform: scale(1.1);
+       }
+
+       .stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+       .comments-icon , .views-icon {
+           max-width: 30px;
+           max-height: 30px;
+           object-fit: contain;
+           display: block;
+           border-radius: 0; !important;
+        }
+
+       .tag {
+            background-color: #f1f1f1;
+            color: #333333;
+            margin: 8px;
+            padding: 8px 20px;
+            font-weight: bolder;
+            font-size: 15px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.3s ease;
+        }
+
+       .tag img {
+           width: 20px;
+           height: 20px;
+           object-fit: contain;
+           margin-right: -2px;
+       }
+
+        /* Triangle on the right side by default */
+        .tag::after {
+            content: "";
+            position: absolute;
+            right: -17px; /* Position it on the right-hand side */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 17px solid #f1f1f1; /* Creates the triangle on the right */
+            border-top: 17px solid transparent;
+            border-bottom: 17px solid transparent;
+        }
+
+        /* card */
+       .card {
+            margin: 0;
+            padding: 0;
+            width: 150px;
+            height: 225px;
+       }
+
+       .card img:hover{
+            opacity: 50%;
+       }
+
+       .card .img:hover .title-name {
+            opacity: 1;
+       }
+
+       .card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            cursor: pointer;
+            margin: 0;
+            border-radius: 5px;
+       }
+
+       .card .img {
+            position: relative;
+            width: 150px;
+            height: 225px;
+       }
+
+       .cast-title {
+            margin: 190px 0 5px;
+            font-size: 30px;
+            font-weight: bolder;
+       }
+
+       .series-title {
+            margin: 30px 0 5px;
+            font-size: 30px;
+            font-weight: bolder;
+       }
+
+       .drama-title {
+            margin: 28px 0 5px;
+            font-size: 30px;
+            font-weight: bolder;
+       }
+
+       .title-name {
+            color: white;
+            position: absolute;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 111;
+            margin: 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            -webkit-text-stroke-width: 0.5px;
+            -webkit-text-stroke-color: grey;
+       }
+
+       .custom-line {
+            width: 100%;
+            height: 2px;
+            background-color: gray;
+            margin-top: 25px;
+            margin-bottom: 15px;
+       }
+
+       /* comment */
+       .comment {
+            flex-direction: row;
+       }
+
+       .comment-detail {
+            flex-direction: row;
+            justify-content: space-between;
+       }
+
+       .comment-form {
+            display: flex;
+            grid-template-columns: 0.3fr 6fr;
+            margin-top: 10px;
+            margin-bottom: -20px;
+            justify-content: left;
+            width: 100%;
+            height: auto;
+       }
+
+       form {
+            justify-content: left;
+       }
+
+       h3 {
+            margin-top: 16px;
+       }
+
+       .username-text, .datetime-text {
+           font-weight: bolder;
+       }
+
+       form button {
+            background-color: transparent;
+            width: 25px;
+            height: auto;
+            font-size: 15px;
+            font-family: 'Roboto Condensed', sans-serif;
+            border: black;
+            cursor: pointer;
+            padding-left: 5px;
+       }
+
+       .user-profile svg {
+            width: 40px;
+            height: auto;
+            fill: black;
+       }
+
+       form button svg {
+            display: flex;
+            fill: black;
+            width: 28px;
+            height: auto;
+        }
+
+       form button svg:hover {
+            fill: #DC0856;
+       }
+
+
+       form input[type=text]{
+            height: 10px;
+            width: 260%;
+            border-radius: 40px;
+            padding: 12.5px;
+            justify-content: right;
+            align-items: center;
+            background-color: rgba(255,255,255,0.2);
+            font-family: 'Roboto Condensed', sans-serif;
+            color: black;
+            padding-left: 20px;
+            font-size: 18px;
+            margin-left: 20px;
+        }
+
+       .comment-submit {
+            position: relative;
+            top: -40px;
+            left: 650px;
+            background-color: transparent;
+            width: 40px;
+            height: 40px;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+       .comment-submit svg {
+            fill: black;
+            width: 24px;
+            height: 24px;
+            transition: fill 0.2s ease;
+       }
+
+       .comment-submit svg:hover {
+            fill: #DC0856;
+       }
+
+       .comment {
+            margin-bottom: 5px;
+            justify-content: left;
+            display: grid;
+            grid-template-columns: 0.3fr 6fr;
+        }
+
+       .comment-form .account {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            margin-bottom: 15px;
+       }
+
+
+       .comment .account {
+            width: 30px;
+            height: auto;
+            fill: black;
+            margin-top: 15px;
+        }
+
+       .comment-text {
+            margin-left: 10px;
+        }
+
+       /* Comment Box Scrollable Section */
+       .comment-box {
+            max-height: 250px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+       }
+
+        /* Force scrollbar visibility even when content is small */
+        .comment-box::-webkit-scrollbar {
+            width: 10px;
+            background-color: #f1f1f1;
+        }
+
+        .comment-box::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 4px;
+        }
+
+        .comment-box::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+
+        .comment-box::-webkit-scrollbar-track {
+            background-color: #e0e0e0;
+        }
+
+       .comment-section {
+            height: 100%;
+       }
+
+       .comment-body {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+            margin-top: -8px ;
+       }
+   </style>
+
+   <body>
+       <!-- Navbar Placeholder -->
+       <div id="navbar-placeholder"></div>
+       <div class="main">
+           <div class="empty"></div>
+           <div class="content">
+               <section class="movie white-text">
+                   <div class="movie-img">
+                       <img src="{{ movie.poster_path }}" alt="Movie Image">
+                   </div>
+                   <div class="detail flex">
+                      <div class="detail-top">
+                           <p class="name title black-text">{{ movie.title_en }}</p>
+                           <div class="icons">
+                               <a href="#" class="bookmark-icon">
+                                   <svg class="bookmark-icon" viewBox="0 0 512 512" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                       <g id="Layer_1"/><g id="Layer_2">
+                                       <g><path class="st0" d="M112.9,43.5v344.14L256,468.5l143.1-80.86V43.5H112.9z M340.55,211.58l-35.15,30.74    c-2.35,2.06-3.38,5.23-2.69,8.28l10.37,45.53c1.66,7.28-6.22,13.01-12.63,9.18l-40.09-23.94c-2.68-1.6-6.02-1.6-8.71,0    l-40.09,23.94c-6.41,3.83-14.29-1.89-12.63-9.18l10.37-45.53c0.69-3.04-0.34-6.22-2.69-8.28l-35.15-30.74    c-5.62-4.92-2.62-14.18,4.82-14.85l46.51-4.2c3.11-0.28,5.81-2.25,7.04-5.12l18.37-42.93c2.94-6.87,12.67-6.87,15.61,0    l18.37,42.93c1.23,2.87,3.93,4.84,7.04,5.12l46.51,4.2C343.16,197.41,346.17,206.67,340.55,211.58z"/></g>
+                                   </g>
+                                   </svg>
+                               </a>
+                               <div class="dropdown-container">
+                                   {% load static %}
+                                   <button class="dropdown-btn" id="translateButton">
+                                       <img src="{% static 'icons/translate.png' %}" alt="trans-icon" class="selected-icon">
+                                       <span class="selected-lang"></span>
+                                   </button>
+                                   <ul class="dropdown-list" >
+                                   <li data-lang="th">
+                                       <img src="{% static 'icons/flags/thailand.png' %}" alt="Thai"> Thai
+                                   </li>
+                                   <li data-lang="ar">
+                                       <img src="{% static 'icons/flags/uae.png' %}" alt="Arabic"> Arabic
+                                   </li>
+                                   <li data-lang="zh-CN">
+                                       <img src="{% static 'icons/flags/china.png' %}" alt="Chinese-CN"> Chinese (Simplified)
+                                   </li>
+                                   <li data-lang="zh-TW">
+                                       <img src="{% static 'icons/flags/taiwan.png' %}" alt="Chinese-TW"> Chinese (Traditional)
+                                   </li>
+                                   <li data-lang="en">
+                                       <img src="{% static 'icons/flags/uk.png' %}" alt="English"> English
+                                   </li>
+                                   <li data-lang="fr">
+                                       <img src="{% static 'icons/flags/france.png' %}" alt="French"> French
+                                   </li>
+                                   <li data-lang="de">
+                                       <img src="{% static 'icons/flags/german.png' %}" alt="German"> German
+                                   </li>
+                                   <li data-lang="hi">
+                                       <img src="{% static 'icons/flags/india.png' %}" alt="Hindi"> Hindi
+                                   </li>
+                                   <li data-lang="it">
+                                       <img src="{% static 'icons/flags/italy.png' %}" alt="Italian"> Italian
+                                   </li>
+                                   <li data-lang="ja">
+                                       <img src="{% static 'icons/flags/japan.png' %}" alt="Japanese"> Japanese
+                                   </li>
+                                   <li data-lang="ko">
+                                       <img src="{% static 'icons/flags/korea.png' %}" alt="Korean"> Korean
+                                   </li>
+                                   <li data-lang="pt">
+                                       <img src="{% static 'icons/flags/portugal.png' %}" alt="Portuguese"> Portuguese
+                                   </li>
+                                   <li data-lang="ru">
+                                       <img src="{% static 'icons/flags/russia.png' %}" alt="Russian"> Russian
+                                   </li>
+                                   <li data-lang="es">
+                                       <img src="{% static 'icons/flags/spain.png' %}" alt="Spanish"> Spanish
+                                   </li>
+                                   </ul>
+                               </div>
+                           </div>
+                      </div>
+                      <p class="sub-name black-text">{{ movie.title_th }}</p>
+                       <div class="info-container">
+                           <p id="movieDetails" class="description black-text">
+                            {{ movie.release_date|date:"Y" }} | {{ movie.genres }} | {{ movie.runtime }}
+                            </p>
+                           <div class="tag-cloud-block">
+                            <span class="tag">
+                                <img src="{% static 'icons/netflix.png' %}" alt="Netflix Icon" class="tag-icon">Netflix
+                            </span>
+                          </div>
+                       </div>
+                       <div id="movieOverview" class="overview black-text">{{ movie.description }}</div>
+                       <div class="custom-line"></div>
+                       <div class="comment-section">
+                           <div class="comment-title">
+                               <div class="stats">
+                                   <button class="fav PLACEHOLDER_IS_FAVORITE_CLASS black-text" id="favoriteButton"
+                                           data-model="character" data-object-id="PLACEHOLDER_CHARACTER_ID">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
+                                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                            </svg>
+                                   </button>
+                                   <h3 class="black-text">97</h3>
+
+                                   <img src="{% static 'icons/blog.png' %}" alt="comments-icon" class="comments-icon">
+                                   <h3 class="black-text">23</h3>
+
+                                   <img src="{% static 'icons/bar-chart.png' %}" alt="engage-icon" class="views-icon">
+                                   <h3 class="black-text">1987</h3>
+                               </div>
+                           </div>
+                           <div class="comment-form">
+                               <img src=" {% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                               <form method="post" class="flex align-items-center" id="commentForm">
+                                   <input type="text" name="user_comment" placeholder="Add a comment..." class="comment-input">
+                                   <button type="submit" class="comment-submit">
+                                       <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                                           <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"></path>
+                                       </svg>
+                                   </button>
+                               </form>
+                           </div>
+
+                           <div class="comment-box">
+                               <!-- Example comment -->
+                               <div class="comment">
+                                   <img src="{% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                                   <div class="comment-text black-text">
+                                       <div class="comment-detail flex">
+                                           <p class="username-text">Jetaime_op</p>
+                                           <p class="datetime-text">7:44 PM · Dec 23, 2024 </p>
+                                       </div>
+                                       <div class="comment-body">love this movie!!</div>
+                                   </div>
+
+                                   <img src="{% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                                   <div class="comment-text black-text">
+                                       <div class="comment-detail flex">
+                                           <p class="username-text">junior.np</p>
+                                           <p class="datetime-text">8:09 PM · Dec 23, 2024 </p>
+                                       </div>
+                                       <div class="comment-body">love this movie!!</div>
+                                   </div>
+
+                                   <img src="{% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                                   <div class="comment-text black-text">
+                                       <div class="comment-detail flex">
+                                           <p class="username-text">TadThpn</p>
+                                           <p class="datetime-text">8:21 PM · Dec 23, 2024 </p>
+                                       </div>
+                                       <div class="comment-body">love this movie!!</div>
+                                   </div>
+
+                                   <img src="{% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                                   <div class="comment-text black-text">
+                                       <div class="comment-detail flex">
+                                           <p class="username-text">tanont916</p>
+                                           <p class="datetime-text">8:32 PM · Dec 23, 2024 </p>
+                                       </div>
+                                       <div class="comment-body">love this movie!!</div>
+                                   </div>
+
+                                   <img src="{% static 'icons/user.png' %}" alt="Profile Photo" class="account">
+                                   <div class="comment-text black-text">
+                                       <div class="comment-detail flex">
+                                           <p class="username-text">_pawwie00</p>
+                                           <p class="datetime-text">8:53 PM · Dec 23, 2024 </p>
+                                       </div>
+                                       <div class="comment-body">love this movie!!</div>
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </section>
+
+               <!-- Leading Cast Section -->
+               <section>
+                   <div class="black-text">
+                       <p class="cast-title">Leading Cast</p>
+                   </div>
+                   <div class="card-layout">
+                       <!-- Replace with a loop to display series -->
+                       <li class="card">
+                           <div class="img">
+                               <img src="{% static 'cast/JeffSatur.png' %}" alt="Cast Image">
+                               <p class="title-name">Jeff Satur</p>
+                           </div>
+                       </li>
+                       <li class="card">
+                           <div class="img">
+                               <img src="{% static 'cast/Engfa.png' %}" alt="Cast Image">
+                               <p class="title-name">Engfa Waraha</p>
+                           </div>
+                       </li>
+                       <li class="card">
+                           <div class="img">
+                               <img src="{% static 'cast/Seeda.png' %}" alt="Cast Image">
+                               <p class="title-name">Seeda Puapimon</p>
+                           </div>
+                       </li>
+                       <li class="card">
+                           <div class="img">
+                               <img src="{% static 'cast/Harit.png' %}" alt="Cast Image">
+                               <p class="title-name">Harit Buayoi</p>
+                           </div>
+                       </li>
+                       <li class="card">
+                           <div class="img">
+                               <img src="{% static 'cast/Pongsakorn.png' %}" alt="Cast Image">
+                               <p class="title-name">Pongsakorn Mettarikanon</p>
+                           </div>
+                       </li>
+                   </div>
+               </section>
+
+               <!-- Series Section -->
+               <section>
+                   <div class="black-text">
+                       <p class="series-title">Related Series</p>
+                   </div>
+                   <div class="card-layout">
+                       <!-- Replace with a loop to display series -->
+                       <li class="card">
+                           <a href="//">
+                               <div class="img">
+                                   <img src="{% static 'posters/poster_s1.jpg' %}" alt="Series Image">
+                                   <p class="title-name">The Believers</p>
+                               </div>
+                           </a>
+                       </li>
+                       <li class="card">
+                           <a href="//">
+                               <div class="img">
+                                   <img src="{% static 'posters/poster_s3.jpg' %}" alt="Series Image">
+                                   <p class="title-name">Delete</p>
+                               </div>
+                           </a>
+                       </li>
+                       <li class="card">
+                           <a href="//">
+                               <div class="img">
+                                   <img src="{% static 'posters/poster_s4.jpg' %}" alt="Series Image">
+                                   <p class="title-name">Master of The House</p>
+                               </div>
+                           </a>
+                       </li>
+                   </div>
+               </section>
+
+               <!-- Drama Section -->
+               <section>
+                   <div class="black-text">
+                       <p class="drama-title">Related Drama</p>
+                   </div>
+                   <div class="card-layout">
+                       <!-- Replace with a loop to display drama -->
+                       <li class="card">
+                           <a href="//">
+                               <div class="img">
+                                   <img src="{% static 'posters/poster_d2.jpg' %}" alt="Drama Image">
+                                   <p class="title-name">Laplae the Hidden Town</p>
+                               </div>
+                           </a>
+                       </li>
+                       <li class="card">
+                           <a href="//">
+                               <div class="img">
+                                   <img src="{% static 'posters/poster_d3.jpg' %}" alt="Drama Image">
+                                   <p class="title-name">Nobody's Happy if I'm Not</p>
+                               </div>
+                           </a>
+                       </li>
+                   </div>
+               </section>
+           </div>
+           <div class="empty"></div>
+       </div>
+       <script>
+           document.addEventListener("DOMContentLoaded", function () {
+               // Bookmark Button Logic
+                const bookmarkBtn = document.querySelector(".bookmark-icon");
+                if (bookmarkBtn) {
+                const bookmarkIcon = bookmarkBtn.querySelector("path");
+                bookmarkBtn.addEventListener("click", function () {
+                bookmarkIcon.setAttribute("fill", bookmarkIcon.getAttribute("fill") === "#DC0856" ? "black" : "#DC0856");
+                });
+                }
+
+                // Favorite Button Logic
+                const favButton = document.querySelector(".fav");
+                if (favButton) {
+                    favButton.addEventListener("click", function () {
+                        this.classList.toggle("is-favorite");
+                    });
+                }
+
+                // Dropdown Logic
+                const dropdownContainer = document.querySelector(".dropdown-container");
+                const dropdownBtn = document.querySelector(".dropdown-btn");
+                const dropdownList = document.querySelector(".dropdown-list");
+                const selectedIcon = document.querySelector(".selected-icon");
+                const selectedLang = document.querySelector(".selected-lang");
+
+                if (dropdownBtn && dropdownList && selectedIcon && selectedLang) {
+                // Toggle dropdown on button click
+                dropdownBtn.addEventListener("click", function (event) {
+                    event.stopPropagation(); // Prevents it from closing immediately
+                    dropdownContainer.classList.toggle("active");
+                });
+
+                // Handle language selection
+                dropdownList.addEventListener("click", function (event) {
+                    const selectedItem = event.target.closest("li");
+                    if (!selectedItem) return;
+
+                    // Get selected language info
+                    const selectedImg = selectedItem.querySelector("img").src;
+                    const selectedAlt = selectedItem.querySelector("img").alt;
+                    const langCode = selectedItem.getAttribute("data-lang");
+
+                    // Update the dropdown button
+                    selectedIcon.src = selectedImg;
+                    selectedIcon.alt = selectedAlt;
+                    selectedLang.textContent = langCode.toUpperCase(); // Show language code
+
+                    // Highlight the selected item
+                    document.querySelectorAll(".dropdown-list li").forEach(li => li.classList.remove("selected"));
+                    selectedItem.classList.add("selected");
+
+                    // Close dropdown
+                    dropdownContainer.classList.remove("active");
+
+                    // Translate Page
+                    translatePage(langCode);
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener("click", function (event) {
+                    if (!dropdownContainer.contains(event.target)) {
+                        dropdownContainer.classList.remove("active");
+                    }
+                });
+                }
+               // Google Translate API Call
+                function translateText(text, targetElementId, lang) {
+                    fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById(targetElementId).innerText = data[0].map(item => item[0]).join("");
+                        })
+                        .catch(error => console.error("Translation error:", error));
+                }
+                function translatePage(lang) {
+                    let textOverview = document.getElementById("movieOverview").innerText;
+                    let textDetails = document.getElementById("movieDetails").innerText;
+
+                    translateText(textOverview, "movieOverview", lang);
+                    translateText(textDetails, "movieDetails", lang);
+                }
+           });
+        </script>
+   </body>
+</html>

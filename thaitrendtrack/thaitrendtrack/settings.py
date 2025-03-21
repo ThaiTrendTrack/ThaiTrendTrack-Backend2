@@ -115,13 +115,16 @@ USE_TZ = True
 
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
+
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "recommendations/templates/static"]
+STATICFILES_DIRS = [BASE_DIR / "recommendations/templates/static",
+                    BASE_DIR / "static"]
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/homepage/'
@@ -130,3 +133,11 @@ LOGIN_REDIRECT_URL = '/homepage/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your SMTP provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ggcrpariz04@gmail.com'
+EMAIL_HOST_PASSWORD = 'Gracecream2002'
