@@ -26,8 +26,10 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
+
 from django import forms
 from .models import UserProfile
+
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
@@ -36,3 +38,19 @@ class ProfileUpdateForm(forms.ModelForm):
         widgets = {
             'birthday': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+from django import forms
+from .models import Post, Comment
+
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['content', 'image']  # Fields for content and image
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']  # Field for comment content

@@ -13,7 +13,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from .models import Movie
+from .models import Movie, Community, Post
 import json
 import random  # ✅ Add randomness
 
@@ -511,6 +511,7 @@ def recommend_movies_advanced(request):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+
 # Homepage Function
 # def homepage(request):
 #     movies = Movie.objects.all().order_by('-popularity')[:10]  # ดึงมาแค่ 10 เรื่อง
@@ -598,3 +599,158 @@ def update_profile(request):
         form = ProfileUpdateForm(instance=user_profile)
 
     return render(request, 'update_profile.html', {'form': form})
+
+
+@login_required
+def community_home(request):
+    selected_club = request.GET.get('club')  # Get the selected club ID from the request
+    communities = Community.objects.all()  # Get all communities
+    if selected_club:
+        # Filter posts by selected club
+        community = get_object_or_404(Community, id=selected_club)
+        posts = Post.objects.filter(community=community).order_by('-created_at')
+    else:
+        # If no club is selected, show all posts
+        posts = Post.objects.all().order_by('-created_at')
+
+    return render(request, 'communities.html', {'communities': communities, 'posts': posts})
+
+
+
+@login_required
+def create_post(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        Post.objects.create(community=community, user=request.user, content=content)
+        return redirect('community_home', community_id=community.id)
+
+
+@login_required
+def settings_view(request):
+    user_profile = request.user.userprofile  # Access the user profile information
+    return render(request, 'settings.html', {'user_profile': user_profile})
+
+@login_required
+def update_profile(request):
+    user_profile = request.user.userprofile  # Get the logged-in user's profile
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            return redirect('settings')  # Redirect back to the settings page
+    else:
+        form = ProfileUpdateForm(instance=user_profile)
+
+    return render(request, 'update_profile.html', {'form': form})
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Community, Post, Comment, Like
+from .forms import PostForm, CommentForm  # Assume you have these forms
+
+@login_required
+# def community_home(request):
+#     # Get the selected community from the query parameters (GET request)
+#     selected_club = request.GET.get('club')  # Get the selected club ID from the request
+#     communities = Community.objects.all()  # Get all communities
+#     posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
+#
+#     if selected_club:
+#         # Filter posts by selected community
+#         community = get_object_or_404(Community, id=selected_club)
+#         posts = Post.objects.filter(community=community).order_by('-created_at')
+#
+#     if request.method == 'POST':
+#         content = request.POST.get('content')
+#         image = request.FILES.get('image')  # To handle image uploads
+#
+#         # Ensure the community is valid
+#         community_id = request.POST.get('community_id')
+#         community = get_object_or_404(Community, id=community_id)
+#
+#         # Create the post
+#         Post.objects.create(community=community, user=request.user, content=content, image=image)
+#
+#         return redirect('community_home')  # Redirect to reload the page with the new post
+#
+#     # Handle comment submission
+#     if request.method == 'POST' and 'comment' in request.POST:
+#         post_id = request.POST.get('post_id')
+#         post = get_object_or_404(Post, id=post_id)
+#         comment_content = request.POST.get('comment')  # Get comment content
+#
+#         # Create a new comment linked to the post and the current user
+#         Comment.objects.create(post=post, user=request.user, content=comment_content)
+#
+#         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))  # Redirect back to the current page
+#
+#     return render(request, 'communities.html', {
+#         'communities': communities,
+#         'posts': posts,
+#     })
+
+
+def community_home(request):
+    selected_club = request.GET.get('club')
+    communities = Community.objects.all()
+    posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
+
+    if selected_club:
+        community = get_object_or_404(Community, id=selected_club)
+        posts = Post.objects.filter(community=community).order_by('-created_at')
+
+    if request.method == 'POST':
+        if 'comment' in request.POST:  # Check if the form is for submitting a comment
+            post_id = request.POST.get('post_id')
+            comment_content = request.POST.get('comment')
+            post = get_object_or_404(Post, id=post_id)
+
+            # Create the comment
+            Comment.objects.create(post=post, user=request.user, content=comment_content)
+            return redirect('community_home')  # Redirect to the same page
+
+        content = request.POST.get('content')
+        image = request.FILES.get('image')  # Handle image uploads
+
+        # Ensure the community is valid
+        community_id = request.POST.get('community_id')
+        community = get_object_or_404(Community, id=community_id)
+
+        # Create the post
+        Post.objects.create(community=community, user=request.user, content=content, image=image)
+
+        return redirect('community_home')  # Reload the page with the new post
+
+    return render(request, 'communities.html', {
+        'communities': communities,
+        'posts': posts,
+    })
+
+
+@login_required
+def create_post(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        image = request.FILES.get('image')
+        Post.objects.create(community=community, user=request.user, content=content, image=image)
+        return redirect('community_home')
+
+    return render(request, 'create_post.html', {'community': community})
+
+@login_required
+def comment_on_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        Comment.objects.create(post=post, user=request.user, content=content)
+        return redirect('community_home')
+
+@login_required
+def like_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if not Like.objects.filter(user=request.user, post=post).exists():
+        Like.objects.create(user=request.user, post=post)
+    return redirect('community_home')

@@ -26,6 +26,7 @@ tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xn
 model = AutoModel.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 model.eval()
 
+
 def get_embedding(text):
     """แปลงข้อความเป็นเวกเตอร์ embedding"""
     if not text or text.strip() == "":
@@ -81,3 +82,48 @@ class Movie(models.Model):
 
     def __str__(self):
         return f"{self.title_th} ({self.title_en})"
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Community(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
+class Post(models.Model):
+    content = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='post_images/', null=True, blank=True)  # For image uploads
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Post by {self.user.username} in {self.community.name}"
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')  # Link comment to post
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link comment to user
+    content = models.TextField()  # Comment content
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp of comment creation
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.post}"
+
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'post')  # Ensure a user can only like a post once
+
+    def __str__(self):
+        return f"Like by {self.user.username}"
+

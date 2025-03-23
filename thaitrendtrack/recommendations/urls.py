@@ -26,5 +26,11 @@ urlpatterns = [
     path("edit_preferences/", save_preferences, name="save_preferences"),
     path('update-profile/', update_profile, name='update_profile'),
     path('recommend_advanced/', views.recommend_movies_advanced, name='recommend_advanced'),
+    path('community/', views.community_home, name='community_home'),
+    path('community/<int:community_id>/post/', views.create_post, name='create_post'),
+    path('community/<int:community_id>/create/', views.create_post, name='create_post'),
+    path('community/<int:community_id>/', views.community_home, name='community_home'),
+    path('post/<int:post_id>/comment/', views.comment_on_post, name='comment_on_post'),
+    path('post/<int:post_id>/like/', views.like_post, name='like_post'),
 
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

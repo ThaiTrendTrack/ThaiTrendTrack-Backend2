@@ -261,6 +261,7 @@
                             <!-- Display Birthday -->
                             {% if user.userprofile.birthday %}
                                 <p><i class="fas fa-calendar"></i> Birthday: <b>{{ user.userprofile.birthday }}</b></p>
+                             <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
                             {% else %}
                                 <p><i class="fas fa-calendar"></i> Birthday: <b>Not Set</b></p>
                             {% endif %}
