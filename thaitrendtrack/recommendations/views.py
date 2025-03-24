@@ -692,41 +692,82 @@ from .forms import PostForm, CommentForm  # Assume you have these forms
 #     })
 
 
+# def community_home(request):
+#     selected_club = request.GET.get('club')
+#     communities = Community.objects.all()
+#     posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
+#
+#     if selected_club:
+#         community = get_object_or_404(Community, name=selected_club)
+#         posts = Post.objects.filter(community=community).order_by('-created_at')
+#
+#     if request.method == 'POST':
+#         if 'comment' in request.POST:  # Check if the form is for submitting a comment
+#             post_id = request.POST.get('post_id')
+#             comment_content = request.POST.get('comment')
+#             post = get_object_or_404(Post, id=post_id)
+#
+#             # Create the comment
+#             Comment.objects.create(post=post, user=request.user, content=comment_content)
+#             return redirect('community_home')  # Redirect to the same page
+#
+#         content = request.POST.get('content')
+#         image = request.FILES.get('image')  # Handle image uploads
+#
+#         # Ensure the community is valid
+#         community_id = request.POST.get('community_id')
+#         community = get_object_or_404(Community, id=community_id)
+#
+#         # Create the post
+#         Post.objects.create(community=community, user=request.user, content=content, image=image)
+#
+#         return redirect('community_home')  # Reload the page with the new post
+#
+#     return render(request, 'communities.html', {
+#         'communities': communities,
+#         'posts': posts,
+#     })
+
+
+# views.py
 def community_home(request):
     selected_club = request.GET.get('club')
-    communities = Community.objects.all()
-    posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
+    communities = Community.objects.all()  # Get all communities
+
+    # Default to show all posts if no club is selected
+    posts = Post.objects.all().order_by('-created_at')
 
     if selected_club:
-        community = get_object_or_404(Community, id=selected_club)
+        community = get_object_or_404(Community, name=selected_club)
         posts = Post.objects.filter(community=community).order_by('-created_at')
 
+    # Handle POST request (for comments and new posts)
     if request.method == 'POST':
-        if 'comment' in request.POST:  # Check if the form is for submitting a comment
+        if 'comment' in request.POST:
             post_id = request.POST.get('post_id')
             comment_content = request.POST.get('comment')
             post = get_object_or_404(Post, id=post_id)
 
             # Create the comment
             Comment.objects.create(post=post, user=request.user, content=comment_content)
-            return redirect('community_home')  # Redirect to the same page
+            return redirect('community_home')  # Redirect to the same page with the new comment
 
+        # Handle new post creation
         content = request.POST.get('content')
-        image = request.FILES.get('image')  # Handle image uploads
-
-        # Ensure the community is valid
+        image = request.FILES.get('image')
         community_id = request.POST.get('community_id')
         community = get_object_or_404(Community, id=community_id)
-
-        # Create the post
         Post.objects.create(community=community, user=request.user, content=content, image=image)
-
-        return redirect('community_home')  # Reload the page with the new post
+        return redirect('community_home')
 
     return render(request, 'communities.html', {
         'communities': communities,
         'posts': posts,
+        'selected_club': selected_club,  # Pass the selected club to highlight the active button
     })
+
+
+
 
 
 @login_required

@@ -53,7 +53,7 @@
         font-weight: bold;
         padding-bottom: 15px;
         border-bottom: 2px solid #ccc;
-        margin-top: 0px;
+        margin-top: -10px;
     }
 
     /* Sub Navbar Links */
@@ -119,82 +119,82 @@
         cursor: pointer;
     }
 
-    /* Post Section */
-    .post-section {
-        display: flex;
-        align-items: center;
-        background: white;
-        padding: 15px;
-        margin: 20px auto;
-        width: 80%;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
+/* Post Section */
+.post-section {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 10px;
+    margin: 20px auto;
+    width: 80%;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    justify-content: space-between; /* Ensures the content is spaced properly */
+}
 
-    /* User Avatar */
-    .user-avatar {
-        width: 48px;
-        height: 50px;
-        border-radius: 50%;
-        margin-right: 10px;
-    }
+/* User Avatar */
+.user-avatar {
+    width: 48px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
 
-    /* Post Input */
-    .post-input {
-        display: flex;
-        flex: 1;
-        align-items: center;
-        background: #f5f5f5;
-        border-radius: 8px;
-        padding: 8px;
-    }
+/* Post Input */
+.post-input {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 8px;
+    width: 100%; /* Ensure it spans available space */
+}
 
-    /* Dropdown */
-    .audience-dropdown {
-        border: none;
-        background: transparent;
-        font-size: 14px;
-        font-weight: bold;
-        margin-right: 10px;
-    }
+/* Dropdown */
+.audience-dropdown {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 10px;
+}
 
-    /* Post Textbox */
-    .post-text {
-        border: none;
-        width: 100%;
-        background: transparent;
-        font-size: 14px;
-        outline: none;
-    }
+/* Post Textbox */
+.post-text {
+    border: none;
+    width: 100%;
+    background: transparent;
+    font-size: 14px;
+    outline: none;
+}
 
-    /* Icons Section */
-    .post-icons {
-        display: flex;
-        gap: 12px;
-        margin-left: 12px;
-    }
+/* Icons Section */
+.post-icons {
+    display: flex;
+    gap: 12px;
+    margin-left: 10px;
+    align-items: center; /* Ensures icons are vertically aligned */
+}
 
-    .icon {
-        font-size: 18px;
-        color: #666;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+/* Post Button */
+.post-btn {
+    background: #DC0856;
+    color: white;
+    border: none;
+    padding: 8px 35px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center; /* Ensures the text is centered inside the button */
+    line-height: 1.5;
+    align-self: center; /* Ensures the button stays centered with respect to the others */
+}
 
-    .icon:hover {
-        color: #DC0856;
-    }
+/* Ensuring that all items inside .post-section are inline */
+.post-section > * {
+    margin-right: 10px;
+}
 
-    /* Post Button */
-    .post-btn {
-        background: #DC0856;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-left: 12px;
-    }
 
     <!--    /* ✅ Post Display Section */-->
     .post-display {
@@ -558,6 +558,12 @@
             margin-top: -8px ;
        }
 
+    .genre-item.active {
+    background: #DC0856;
+    color: white;
+}
+
+
 </style>
 <body>
 
@@ -575,7 +581,7 @@
 
                      <!-- Sub Navbar (Home & Explore) -->
                     <div class="sub-navbar">
-                        <a href="#" class="sub-nav-item active">
+                        <a href="{% url 'community_home' %}" class="sub-nav-item active">
                             <i class="fas fa-home sub-nav-icon"></i> Home
                         </a>
                         <span class="divider">|</span>
@@ -584,20 +590,16 @@
                         </a>
                     </div>
                     <!-- Genre Categories Navbar -->
-                    <div class="genre-navbar">
-                        <button id="prev-nav" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
-                        <div class="genre-container">
-                            <div class="genre-list" id="genre-carousel">
-                                <a href="#" class="genre-item">Action Club</a>
-                                <a href="#" class="genre-item">Comedy Club</a>
-                                <a href="#" class="genre-item">Crime Club</a>
-                                <a href="#" class="genre-item">Drama Club</a>
-                                <a href="#" class="genre-item">Horror Club</a>
-                                <a href="#" class="genre-item">Romance Club</a>
-                            </div>
-                        </div>
-                        <button id="next-nav" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                    <div class="genre-list" id="genre-carousel">
+                        <a href="?club=Action Club" class="genre-item {% if selected_club == 'Action Club' %}active{% endif %}">Action Club</a>
+                        <a href="?club=Comedy Club" class="genre-item {% if selected_club == 'Comedy Club' %}active{% endif %}">Comedy Club</a>
+                        <a href="?club=Crime Club" class="genre-item {% if selected_club == 'Crime Club' %}active{% endif %}">Crime Club</a>
+                        <a href="?club=Drama Club" class="genre-item {% if selected_club == 'Drama Club' %}active{% endif %}">Drama Club</a>
+                        <a href="?club=Horror Club" class="genre-item {% if selected_club == 'Horror Club' %}active{% endif %}">Horror Club</a>
+                        <a href="?club=Romance Club" class="genre-item {% if selected_club == 'Romance Club' %}active{% endif %}">Romance Club</a>
                     </div>
+
+
 
                  <!-- Post Section -->
                     <div class="post-section">
