@@ -96,15 +96,43 @@ class Community(models.Model):
         return self.name
 
 
-class Post(models.Model):
-    content = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='post_images/', null=True, blank=True)  # For image uploads
+class Hashtag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Poll(models.Model):
+    question = models.CharField(max_length=255)
+    choices = models.JSONField()  # To store choices in a JSON format
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Post by {self.user.username} in {self.community.name}"
+        return self.question
+
+
+class Post(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    image = models.ImageField(upload_to='post_images/', null=True, blank=True)
+    hashtags = models.ManyToManyField(Hashtag, related_name='posts', blank=True)
+    poll = models.OneToOneField(Poll, on_delete=models.CASCADE, null=True, blank=True)  # Link to Poll
+    created_at = models.DateTimeField(auto_now_add=True)  # Add created_at field
+    likes = models.ManyToManyField(User, related_name="liked_posts", blank=True)  # New field for likes
+
+    def __str__(self):
+        return self.content
+
+
+class Vote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
+    choice = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Vote for {self.poll} by {self.user}"
 
 
 class Comment(models.Model):
@@ -126,4 +154,3 @@ class Like(models.Model):
 
     def __str__(self):
         return f"Like by {self.user.username}"
-

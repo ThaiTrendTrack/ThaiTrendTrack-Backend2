@@ -47,8 +47,11 @@ from .models import Post, Comment
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['content', 'image']  # Fields for content and image
+        fields = ['community', 'content', 'image', 'hashtags', 'poll']  # No 'is_poll' field here
 
+    # Poll Choices field as a simple form input
+    poll_choices = forms.CharField(widget=forms.Textarea, required=False,
+                                   help_text="Enter poll options as comma separated values.")
 
 class CommentForm(forms.ModelForm):
     class Meta:

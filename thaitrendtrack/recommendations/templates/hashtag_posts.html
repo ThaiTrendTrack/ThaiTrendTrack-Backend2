@@ -1,0 +1,15 @@
+<h2>Posts for #{{ hashtag }}</h2>
+<div class="post-display">
+    {% for post in posts %}
+        <div class="post-item">
+            <p>{{ post.content }}</p>
+            <div class="hashtags">
+                {% for hashtag in post.hashtags.all %}
+                    <a href="{% url 'hashtag_posts' hashtag.name %}" class="hashtag">#{{ hashtag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    {% empty %}
+        <p>No posts found for this hashtag.</p>
+    {% endfor %}
+</div>

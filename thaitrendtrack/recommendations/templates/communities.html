@@ -122,14 +122,71 @@
 /* Post Section */
 .post-section {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     background: white;
-    padding: 10px;
+    padding: 20px;
     margin: 20px auto;
     width: 80%;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    justify-content: space-between; /* Ensures the content is spaced properly */
+}
+
+.post-section form {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    background: #f5f5f5;
+    resize: none;
+}
+
+.form-group textarea {
+    min-height: 120px;
+}
+
+.form-group input[type="file"] {
+    padding: 0;
+    background: transparent;
+    border: 1px solid #ccc;
+}
+
+.post-btn {
+    background: #DC0856;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.post-btn:hover {
+    background-color: #b8044c;
+}
+
+.post-section form label {
+    margin: 10px 0;
+    width: 100%;
 }
 
 /* User Avatar */
@@ -347,6 +404,7 @@
             border: none;
             cursor: pointer;
             padding: 0;
+            margin-left: 10px;
 
        }
 
@@ -563,6 +621,38 @@
     color: white;
 }
 
+.hashtag {
+    color: #1DA1F2; /* Twitter blue */
+    font-size: 14px;
+    margin-right: 10px;
+    text-decoration: none;
+}
+
+.hashtags {
+    line-height: 1.5; /* เลื่อนขึ้นจากบรรทัดปกติ */
+    margin-right: 10px;
+}
+
+.hashtag:hover {
+    text-decoration: underline;
+}
+
+.fav.is-favorite svg {
+    fill: #DC0856; /* Change color when liked */
+}
+
+.delete-post-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.delete-post-btn:hover {
+    background-color: darkred;
+}
+
+
 
 </style>
 <body>
@@ -591,46 +681,48 @@
                     </div>
                     <!-- Genre Categories Navbar -->
                     <div class="genre-list" id="genre-carousel">
-                        <a href="?club=Action Club" class="genre-item {% if selected_club == 'Action Club' %}active{% endif %}">Action Club</a>
-                        <a href="?club=Comedy Club" class="genre-item {% if selected_club == 'Comedy Club' %}active{% endif %}">Comedy Club</a>
-                        <a href="?club=Crime Club" class="genre-item {% if selected_club == 'Crime Club' %}active{% endif %}">Crime Club</a>
-                        <a href="?club=Drama Club" class="genre-item {% if selected_club == 'Drama Club' %}active{% endif %}">Drama Club</a>
-                        <a href="?club=Horror Club" class="genre-item {% if selected_club == 'Horror Club' %}active{% endif %}">Horror Club</a>
-                        <a href="?club=Romance Club" class="genre-item {% if selected_club == 'Romance Club' %}active{% endif %}">Romance Club</a>
+                        <a href="?club=Action%20Club" class="genre-item">Action Club</a>
+                        <a href="?club=Comedy%20Club" class="genre-item">Comedy Club</a>
+                        <a href="?club=Crime%20Club" class="genre-item">Crime Club</a>
+                        <a href="?club=Drama%20Club" class="genre-item">Drama Club</a>
+                        <a href="?club=Horror%20Club" class="genre-item">Horror Club</a>
+                        <a href="?club=Romance%20Club" class="genre-item">Romance Club</a>
                     </div>
 
 
-
-                 <!-- Post Section -->
-                    <div class="post-section">
-                        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar">  <!-- Dynamically show user's profile picture -->
-                        <form method="POST" enctype="multipart/form-data">  <!-- Post Form -->
-                            {% csrf_token %}
-                            <div class="post-input">
-                                <label>
-                                    <select class="audience-dropdown" name="community_id" required>
-                                        <option value="" disabled selected>Choose Audience</option>
-                                        {% for community in communities %}
-                                            <option value="{{ community.id }}">{{ community.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </label>
-                                <label>
-                                    <input type="text" name="content" placeholder="What is happening?!" class="post-text" required>
-                                </label>
-                            </div>
-                            <!-- Icons before Post Button -->
-                            <div class="post-icons">
-                                <i class="fas fa-hashtag icon"></i>
-                                <i class="fas fa-image icon"></i>
-                                <i class="fas fa-chart-bar icon"></i>
-                            </div>
-                            <button type="submit" class="post-btn">Post</button>
-                        </form>
-                    </div>
-
+                    <!-- Post Section -->
+            <div class="post-section">
+                <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar">  <!-- Dynamically show user's profile picture -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <label>
+                        <select name="community_id">
+                            {% for community in communities %}
+                                <option value="{{ community.id }}">{{ community.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <textarea name="content" placeholder="What's happening?" required></textarea>
+                    </label>
+                    <label>
+                        <input type="file" name="image">
+                    </label>
+                    <label>
+                        <input type="text" name="hashtags" placeholder="Add hashtags, separated by commas">
+                    </label>
+                    <label>
+                        <input type="text" name="poll_question" placeholder="Poll Question">
+                    </label>
+                    <label>
+                        <input type="text" name="poll_choices" placeholder="Poll Choices, separated by commas">
+                    </label>
+                    <button type="submit" class="post-btn">Post</button>
+                </form>
+            </div>
 
                     <!-- ✅ Post Display Section -->
+            <!-- ✅ Post Display Section -->
 <div class="post-display">
     {% for post in posts %}
         <div class="post-item">
@@ -657,53 +749,70 @@
                         <p class="overview black-text" id="postOverview">{{ post.content }}</p>
                         <div class="custom-line"></div>
 
-                        <div class="comment-section">
-                            <div class="comment-title">
-                                <div class="stats">
-                                    <!-- Like Button -->
-                                    <button class="fav PLACEHOLDER_IS_FAVORITE_CLASS black-text" id="favoriteButton">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
-                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                        </svg>
-                                    </button>
-                                    <h3 class="black-text">{{ post.likes.count }}</h3>
-                                    <h3 class="black-text">{{ post.comments.count }}</h3>
-                                </div>
-                            </div>
+                        <!-- Display Hashtags -->
+                        <div class="hashtags">
+                            {% for hashtag in post.hashtags.all %}
+                                <a href="{% url 'hashtag_posts' hashtag_name=hashtag.name %}" class="hashtag">#{{ hashtag.name }}</a>
+                            {% endfor %}
+                        </div>
 
-                            <!-- Comment Form -->
-                    <div class="comment-form">
-                        <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile Photo" class="account" style="width: 40px; height: 40px;">
-                        <form method="POST" class="flex align-items-center" id="commentForm">
-                            {% csrf_token %}
-                            <input type="text" name="comment" placeholder="Add a comment..." class="comment-input" required>
-                            <input type="hidden" name="post_id" value="{{ post.id }}">
-                            <button type="submit" class="comment-submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
-                                    <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"></path>
+                        <!-- Like Section -->
+                        <div class="like-section">
+                            <button class="fav" id="like-button-{{ post.id }}" onclick="likePost({{ post.id }})">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                                 </svg>
                             </button>
-                        </form>
-                    </div>
+                            <h3 class="black-text" id="like-count-{{ post.id }}">{{ post.likes.count }}</h3>
+                        </div>
 
+                        <!-- Comment Section -->
+                        <div class="comment-section">
+                            <!-- Comment Form -->
+                            <div class="comment-form">
+                                <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile Photo" class="account" style="width: 40px; height: 40px;">
+                                <form method="POST" class="flex align-items-center" id="commentForm">
+                                    {% csrf_token %}
+                                    <input type="text" name="comment" placeholder="Add a comment..." class="comment-input" required>
+                                    <input type="hidden" name="post_id" value="{{ post.id }}">
+                                    <button type="submit" class="comment-submit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                                            <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
 
                             <!-- Display Comments -->
                             <div class="comment-box">
                                 {% for comment in post.comments.all %}
-                                    <div class="comment">
-                                        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar" style="width: 40px; height: 40px;">  <!-- Display user's profile picture -->
-
+                                    <div class="comment" id="comment-{{ comment.id }}">
+                                        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar" style="width: 40px; height: 40px;">
                                         <div class="comment-text black-text">
                                             <div class="comment-detail flex">
                                                 <p class="username-text">{{ comment.user.username }}</p>
                                                 <p class="datetime-text">{{ comment.created_at|date:"h:i A · M d, Y" }}</p>
                                             </div>
                                             <div class="comment-body">{{ comment.content }}</div>
+
+                                            <!-- Delete Comment Button -->
+                                            {% if comment.user == request.user %}
+                                                <button onclick="deleteComment({{ comment.id }})" class="delete-comment-btn">
+                                                    Delete Comment
+                                                </button>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         </div>
+
+                        <!-- Delete Post Button -->
+                        {% if post.user == request.user %}
+                            <button onclick="deletePost({{ post.id }})" class="delete-post-btn">
+                                Delete Post
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </section>
@@ -824,4 +933,99 @@ $(document).ready(function() {
 });
 </script>
 
+<script>
+function likePost(postId) {
+    const likeButton = document.getElementById(`like-button-${postId}`);
+    const likeCount = document.getElementById(`like-count-${postId}`);
 
+    // Send a POST request to toggle like/unlike
+    fetch(`/like_post/${postId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ post_id: postId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.likes_count !== undefined) {
+            // Update the like count
+            likeCount.innerText = data.likes_count;
+
+            // Toggle the like button style based on the like status
+            if (data.is_liked) {
+                likeButton.classList.add('is-favorite'); // Change color or appearance for liked state
+            } else {
+                likeButton.classList.remove('is-favorite'); // Revert style for unliked state
+            }
+        } else {
+            alert('Error liking post: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Something went wrong.');
+    });
+}
+
+</script>
+
+<script>
+function deletePost(postId) {
+    if (confirm('Are you sure you want to delete this post?')) {
+        fetch('/delete_post/' + postId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'post_id': postId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);  // Successfully deleted the post
+                // Remove the post from the DOM
+                document.getElementById('post-' + postId).remove();
+            } else {
+                alert(data.error);  // Something went wrong
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+}
+
+</script>
+<script>
+    function deleteComment(commentId) {
+    if (confirm("Are you sure you want to delete this comment?")) {
+        fetch(`/delete_comment/${commentId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                // Remove the comment from the DOM
+                document.getElementById(`comment-${commentId}`).remove();
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Something went wrong.');
+        });
+    }
+}
+
+</script>

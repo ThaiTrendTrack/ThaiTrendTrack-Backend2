@@ -31,6 +31,9 @@ urlpatterns = [
     path('community/<int:community_id>/create/', views.create_post, name='create_post'),
     path('community/<int:community_id>/', views.community_home, name='community_home'),
     path('post/<int:post_id>/comment/', views.comment_on_post, name='comment_on_post'),
-    path('post/<int:post_id>/like/', views.like_post, name='like_post'),
+    path('like_post/<int:post_id>/', views.like_post, name='like_post'),
+    path('hashtag/<str:hashtag_name>/', views.hashtag_posts, name='hashtag_posts'),
+    path('delete_post/<int:post_id>/', views.delete_post, name='delete_post'),
+    path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
 
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

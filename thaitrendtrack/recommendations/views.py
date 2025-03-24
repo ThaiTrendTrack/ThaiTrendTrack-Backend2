@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import UserProfile
 from .forms import CustomUserCreationForm
@@ -616,7 +617,6 @@ def community_home(request):
     return render(request, 'communities.html', {'communities': communities, 'posts': posts})
 
 
-
 @login_required
 def create_post(request, community_id):
     community = get_object_or_404(Community, id=community_id)
@@ -630,6 +630,7 @@ def create_post(request, community_id):
 def settings_view(request):
     user_profile = request.user.userprofile  # Access the user profile information
     return render(request, 'settings.html', {'user_profile': user_profile})
+
 
 @login_required
 def update_profile(request):
@@ -650,7 +651,6 @@ from django.contrib.auth.decorators import login_required
 from .models import Community, Post, Comment, Like
 from .forms import PostForm, CommentForm  # Assume you have these forms
 
-@login_required
 # def community_home(request):
 #     # Get the selected community from the query parameters (GET request)
 #     selected_club = request.GET.get('club')  # Get the selected club ID from the request
@@ -729,45 +729,76 @@ from .forms import PostForm, CommentForm  # Assume you have these forms
 #     })
 
 
-# views.py
+from django.utils.html import escape
+import re
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Post, Poll, Hashtag, Community
+from django.contrib.auth.models import User
+
+
+@login_required
 def community_home(request):
     selected_club = request.GET.get('club')
-    communities = Community.objects.all()  # Get all communities
-
-    # Default to show all posts if no club is selected
+    communities = Community.objects.all()
     posts = Post.objects.all().order_by('-created_at')
 
     if selected_club:
         community = get_object_or_404(Community, name=selected_club)
         posts = Post.objects.filter(community=community).order_by('-created_at')
 
-    # Handle POST request (for comments and new posts)
     if request.method == 'POST':
+        # Handle comment submission
         if 'comment' in request.POST:
             post_id = request.POST.get('post_id')
             comment_content = request.POST.get('comment')
             post = get_object_or_404(Post, id=post_id)
-
-            # Create the comment
             Comment.objects.create(post=post, user=request.user, content=comment_content)
-            return redirect('community_home')  # Redirect to the same page with the new comment
+            return redirect('community_home')
 
-        # Handle new post creation
+        # Handle new post creation with poll and hashtags
         content = request.POST.get('content')
         image = request.FILES.get('image')
         community_id = request.POST.get('community_id')
         community = get_object_or_404(Community, id=community_id)
-        Post.objects.create(community=community, user=request.user, content=content, image=image)
+
+        # Handle Poll Creation
+        poll_question = request.POST.get('poll_question')
+        poll_choices = request.POST.getlist('poll_choices')
+
+        # Handle Hashtag Creation
+        hashtags_input = request.POST.get('hashtags')  # Get the hashtags input as a comma-separated string
+        hashtags = [Hashtag.objects.get_or_create(name=tag.strip())[0] for tag in
+                    hashtags_input.split(',')]  # Create or get existing hashtags
+
+        # Create the post
+        new_post = Post.objects.create(
+            community=community,
+            user=request.user,
+            content=content,
+            image=image
+        )
+
+        # Assign hashtags to the post
+        new_post.hashtags.set(hashtags)
+        new_post.save()
+
+        # Create poll and link to the post
+        if poll_question and poll_choices:
+            poll = Poll.objects.create(
+                question=poll_question,
+                choices=poll_choices
+            )
+            new_post.poll = poll
+            new_post.save()
+
         return redirect('community_home')
 
     return render(request, 'communities.html', {
         'communities': communities,
         'posts': posts,
-        'selected_club': selected_club,  # Pass the selected club to highlight the active button
+        'selected_club': selected_club,
     })
-
-
-
 
 
 @login_required
@@ -781,6 +812,7 @@ def create_post(request, community_id):
 
     return render(request, 'create_post.html', {'community': community})
 
+
 @login_required
 def comment_on_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -789,9 +821,75 @@ def comment_on_post(request, post_id):
         Comment.objects.create(post=post, user=request.user, content=content)
         return redirect('community_home')
 
+
+@login_required
+def hashtag_posts(request, hashtag_name):
+    # Retrieve the hashtag object from the database
+    hashtag = Hashtag.objects.get(name=hashtag_name)
+
+    # Retrieve posts that contain the given hashtag
+    posts = Post.objects.filter(hashtags=hashtag).order_by('-created_at')
+
+    # Return the posts to the template
+    return render(request, 'communities.html', {
+        'posts': posts,
+        'selected_club': 'all',  # If you have a selected club, you can modify this
+        'hashtag': hashtag_name
+    })
+
+
 @login_required
 def like_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    if not Like.objects.filter(user=request.user, post=post).exists():
-        Like.objects.create(user=request.user, post=post)
-    return redirect('community_home')
+    if request.method == "POST":
+        try:
+            post = get_object_or_404(Post, id=post_id)
+
+            # Check if the user has already liked the post
+            if post.likes.filter(id=request.user.id).exists():
+                # If liked, unlike by removing the user from the likes
+                post.likes.remove(request.user)
+                is_liked = False
+            else:
+                # If not liked, add the user to the likes
+                post.likes.add(request.user)
+                is_liked = True
+
+            post.save()
+
+            # Return the updated like count and like status (liked or unliked)
+            return JsonResponse({'likes_count': post.likes.count(), 'is_liked': is_liked}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# Delete Comment View
+
+def delete_comment(request, comment_id):
+    if request.method == 'POST':
+        comment = get_object_or_404(Comment, id=comment_id)
+
+        # Ensure the user is the author of the comment
+        if comment.user == request.user:
+            comment.delete()
+            return JsonResponse({'message': 'Comment deleted successfully'}, status=200)
+
+        return JsonResponse({'error': 'You can only delete your own comments'}, status=403)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# View to delete post
+def delete_post(request, post_id):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, id=post_id)
+
+        # Ensure that the user is the owner of the post
+        if post.user == request.user:
+            post.delete()
+            return JsonResponse({'message': 'Post deleted successfully'}, status=200)
+        else:
+            return JsonResponse({'error': 'You can only delete your own posts'}, status=403)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
