@@ -469,67 +469,116 @@
         <div class="popup-actions">
             <button class="cancel-btn" onclick="closePopup()">Cancel</button>
             <button class="apply-btn" onclick="submitAdvancedSearch()">Apply</button>
+
+
         </div>
     </div>
 </div>
 
  <script>
         // เปิดป๊อปอัพ
-        function openPopup() {
-            document.getElementById('popupOverlay').style.display = 'flex';
-        }
+        function openPopup() { document.getElementById("popupOverlay").style.display = "flex"; }
+        function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
 
-        // ปิดป๊อปอัพ
-        function closePopup() {
-            document.getElementById('popupOverlay').style.display = 'none';
-        }
+    </script>
+ <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const applyBtn = document.getElementById('apply-btn');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', submitAdvancedSearch);
+    }
+});
+</script>
 
-        // ฟังก์ชันเมื่อคลิกปุ่ม Apply
-        function submitAdvancedSearch() {
-            console.log('Apply button clicked'); // ตรวจสอบว่าเปิดใช้งานแล้ว
+<script>
+function submitAdvancedSearch() {
+    const genre = document.querySelector('select').value;
+    const cast = document.querySelector('input[placeholder="Enter cast name"]').value;
+    const description = document.querySelector('input[placeholder="Enter description"]').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
 
-            // รับข้อมูลจากฟอร์ม
-            const genre = document.getElementById('genre-select').value;
-            const cast = document.getElementById('cast-input').value;
-            const description = document.getElementById('description-input').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
+    console.log("Submitted data:", { genre, cast, description, startDate, endDate });
 
-            console.log("Data being sent:", { genre, cast, description, startDate, endDate });
+    // Prepare the data to be sent to the backend
+    const data = {
+        genre,
+        cast,
+        description,
+        start_date: startDate,
+        end_date: endDate
+    };
 
-            // เตรียมข้อมูลเพื่อส่ง
+fetch('/recommend_advanced/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        genre: selectedGenre,
+        cast: selectedCast,
+        description: selectedDescription,
+        start_date: startDate,
+        end_date: endDate,
+    })
+})
+.then(response => response.json())
+.then(data => {
+    console.log('Backend response:', data);
+    if (data.success) {
+        // Redirect to the 'movies_advance' page after successful recommendation
+        window.location.href = '/movies_advance/';
+    }
+})
+.catch(error => console.error('Error:', error));
+
+
+</script>
+
+
+<script>
+// Wait until the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the Apply button element
+    const applyBtn = document.getElementById('apply-btn');
+
+    // Add a click event listener to the Apply button
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+            // Collect data from the form or input fields
             const data = {
-                genre: genre || null,
-                cast: cast || null,
-                description: description || null,
-                start_date: startDate || null,
-                end_date: endDate || null
+                genre: document.getElementById('genre').value,
+                cast: document.getElementById('cast').value,
+                overview: document.getElementById('overview').value,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
             };
 
-            // ส่งข้อมูลไปยัง backend
-            fetch("{% url 'recommend_advanced' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Backend response:", data);
-
-                if (data.movies) {
-                    // เก็บข้อมูลหนังที่แนะนำลงใน localStorage
-                    localStorage.setItem('recommendedMovies', JSON.stringify(data.movies));
-                    window.location.href = "/movies_advance/";  // เปลี่ยนหน้าไปยังหน้าผลลัพธ์
-                } else {
-                    console.log("No movies found.");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            // Send data to the backend using fetch API
+            fetch('/recommend_advanced/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        genre: selectedGenre,
+        cast: selectedCast,
+        description: selectedDescription,
+        start_date: startDate,
+        end_date: endDate,
+    })
+})
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/movies_advance/';  // Redirect after success
+        } else {
+            console.error('Error:', data.error);
         }
-    </script>
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+</script>
 </body>
 </html>

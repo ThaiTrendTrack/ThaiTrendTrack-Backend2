@@ -457,61 +457,34 @@ def settings_view(request):
     return render(request, 'settings.html')
 
 
+@csrf_exempt
 def recommend_movies_advanced(request):
-    if request.method == "POST":
-        # Parse the incoming data
-        data = json.loads(request.body)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
 
-        # Start with all movies
-        filtered_movies = Movie.objects.all()
+            # Your logic for filtering and recommending movies
+            recommended_movies = Movie.objects.all()[:5]
 
-        # Filter by genre if provided
-        if data.get('genre'):
-            filtered_movies = filtered_movies.filter(genres__contains=[data['genre']])
+            return JsonResponse({
+                "success": True,
+                "recommended_movies": [
+                    {
+                        'id': movie.id,
+                        'title_en': movie.title_en,
+                        'title_th': movie.title_th,
+                        'release_date': movie.release_date.strftime('%Y'),
+                        'poster_path': movie.poster_path,
+                    }
+                    for movie in recommended_movies
+                ]
+            })
 
-        # Filter by cast if provided
-        if data.get('cast'):
-            filtered_movies = filtered_movies.filter(cast__contains=[data['cast']])
+        except Exception as e:
+            # Return an error if something goes wrong in the backend
+            return JsonResponse({"error": str(e)}, status=500)
 
-        # Filter by overview using embeddings
-        if data.get('overview'):  # Using 'overview' instead of 'description'
-            overview_embedding = get_embedding(data['overview'])
-            movie_embeddings = []
-            for movie in filtered_movies:
-                movie_embedding = pickle.loads(movie.embedding)  # Load precomputed embeddings from the model
-                movie_embeddings.append(movie_embedding)
-
-            movie_embeddings = np.array(movie_embeddings)
-            similarities = cosine_similarity([overview_embedding], movie_embeddings).flatten()
-
-            # Sort movies by similarity to the overview provided
-            filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
-            filtered_movies = [movie for movie, _ in filtered_movies]
-
-        # Filter by release date range if provided
-        if data.get('start_date') and data.get('end_date'):
-            filtered_movies = filtered_movies.filter(release_date__range=[data['start_date'], data['end_date']])
-
-        # Limit the results to the top 5 recommended movies
-        recommended_movies = filtered_movies[:5]
-
-        # Store the recommended movies in the session (optional)
-        request.session['recommended_movies'] = [
-            {
-                'id': movie.id,
-                'title_en': movie.title_en,
-                'title_th': movie.title_th,
-                'release_date': movie.release_date.strftime('%Y'),
-                'poster_path': movie.poster_path,
-            }
-            for movie in recommended_movies
-        ]
-
-        # Redirect to the 'recommend_advanced' page
-        return HttpResponseRedirect(reverse('recommend_advanced'))
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
+    return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
 
 # Homepage Function
 # def homepage(request):
@@ -894,3 +867,14 @@ def delete_post(request, post_id):
             return JsonResponse({'error': 'You can only delete your own posts'}, status=403)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def movies_advance(request):
+    # Fetch recommended movies from the session (if any)
+    recommended_movies = request.session.get('recommended_movies', [])
+
+    # If no movies in the session, you can fetch all movies or any specific category
+    if not recommended_movies:
+        recommended_movies = Movie.objects.all()
+
+    # Pass the movies to the template
+    return render(request, 'movies_advance.html', {'movies': recommended_movies})

@@ -35,5 +35,7 @@ urlpatterns = [
     path('hashtag/<str:hashtag_name>/', views.hashtag_posts, name='hashtag_posts'),
     path('delete_post/<int:post_id>/', views.delete_post, name='delete_post'),
     path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
+    path('recommend_advanced/', views.recommend_movies_advanced, name='recommend_advanced'),
+    path('movies_advance/', views.movies_advance, name='movies_advance'),
 
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

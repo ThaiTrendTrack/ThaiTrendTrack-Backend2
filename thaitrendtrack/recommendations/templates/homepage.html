@@ -198,7 +198,7 @@
         </section>
 
         <section class="series-content">
-        <h2 class="section-title">TV Series</h2>
+<!--        <h2 class="section-title">TV Series</h2>-->
         <div class="series-container">
             {% for show in series %}
                 <div class="series-card">
@@ -407,5 +407,42 @@
         function openPopup() { document.getElementById("popupOverlay").style.display = "flex"; }
         function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
     </script>
+<script>
+function submitAdvancedSearch() {
+    const genre = document.querySelector('select').value;
+    const cast = document.querySelector('input[placeholder="Enter cast name"]').value;
+    const description = document.querySelector('input[placeholder="Enter description"]').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+
+    console.log("Submitted data:", { genre, cast, description, startDate, endDate });
+
+    // Prepare the data to be sent to the backend
+    const data = {
+        genre,
+        cast,
+        description,
+        start_date: startDate,
+        end_date: endDate
+    };
+
+    // Send data to the backend using POST request
+    fetch("/recommend_advanced/", {
+        method: 'POST',  // Ensure it's POST
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Backend response:', data);
+        if (data.success) {
+            // Redirect to the 'movies_advance' page after successful recommendation
+            window.location.href = '/movies_advance/';  // Redirect to the page showing recommended movies
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
 </body>
 </html>
