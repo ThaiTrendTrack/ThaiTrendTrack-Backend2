@@ -711,12 +711,13 @@
                     <label>
                         <input type="text" name="hashtags" placeholder="Add hashtags, separated by commas">
                     </label>
-                    <label>
-                        <input type="text" name="poll_question" placeholder="Poll Question">
-                    </label>
-                    <label>
-                        <input type="text" name="poll_choices" placeholder="Poll Choices, separated by commas">
-                    </label>
+                    <!-- Add Poll Question -->
+                    <label for="poll_question">Poll Question</label>
+                    <input type="text" id="poll_question" name="poll_question" required>
+
+                    <!-- Poll Choices -->
+                    <label for="poll_choices">Poll Choices (comma-separated)</label>
+<input type="text" id="poll_choices" name="poll_choices" required>
                     <button type="submit" class="post-btn">Post</button>
                 </form>
             </div>
@@ -749,10 +750,11 @@
                         <p class="overview black-text" id="postOverview">{{ post.content }}</p>
                         <div class="custom-line"></div>
 
-                        <!-- Display Hashtags -->
                         <div class="hashtags">
                             {% for hashtag in post.hashtags.all %}
-                                <a href="{% url 'hashtag_posts' hashtag_name=hashtag.name %}" class="hashtag">#{{ hashtag.name }}</a>
+                                {% if hashtag.name %}
+                                    <a href="{% url 'hashtag_posts' hashtag_name=hashtag.name %}" class="hashtag">#{{ hashtag.name }}</a>
+                                {% endif %}
                             {% endfor %}
                         </div>
 
@@ -766,9 +768,22 @@
                             <h3 class="black-text" id="like-count-{{ post.id }}">{{ post.likes.count }}</h3>
                         </div>
 
+                        <!-- Poll Section -->
+                        <!-- Display Poll -->
+                        {% if post.poll %}
+                            <div class="poll-section">
+                                <h4>{{ post.poll.question }}</h4>
+                                <ul>
+                                    {% for choice in post.poll.choices %}
+                                        <li>{{ choice }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+
                         <!-- Comment Section -->
                         <div class="comment-section">
-                            <!-- Comment Form -->
                             <div class="comment-form">
                                 <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile Photo" class="account" style="width: 40px; height: 40px;">
                                 <form method="POST" class="flex align-items-center" id="commentForm">
@@ -819,6 +834,7 @@
         </div>
     {% endfor %}
 </div>
+
 
 
 </body>

@@ -111,6 +111,9 @@ class Poll(models.Model):
     def __str__(self):
         return self.question
 
+    def get_choices(self):
+        return self.choices
+
 
 class Post(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)

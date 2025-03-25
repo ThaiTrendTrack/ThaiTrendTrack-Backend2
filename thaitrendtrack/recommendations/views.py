@@ -762,10 +762,6 @@ def community_home(request):
         community_id = request.POST.get('community_id')
         community = get_object_or_404(Community, id=community_id)
 
-        # Handle Poll Creation
-        poll_question = request.POST.get('poll_question')
-        poll_choices = request.POST.getlist('poll_choices')
-
         # Handle Hashtag Creation
         hashtags_input = request.POST.get('hashtags')  # Get the hashtags input as a comma-separated string
         hashtags = [Hashtag.objects.get_or_create(name=tag.strip())[0] for tag in
@@ -783,12 +779,16 @@ def community_home(request):
         new_post.hashtags.set(hashtags)
         new_post.save()
 
-        # Create poll and link to the post
+        # Handle Poll Creation
+        poll_question = request.POST.get('poll_question')
+        poll_choices = request.POST.getlist('poll_choices')  # Poll choices are sent as a list
+
         if poll_question and poll_choices:
             poll = Poll.objects.create(
                 question=poll_question,
-                choices=poll_choices
+                choices=poll_choices  # Storing choices as a list
             )
+            # Link the poll to the post
             new_post.poll = poll
             new_post.save()
 
@@ -799,6 +799,7 @@ def community_home(request):
         'posts': posts,
         'selected_club': selected_club,
     })
+
 
 
 @login_required
