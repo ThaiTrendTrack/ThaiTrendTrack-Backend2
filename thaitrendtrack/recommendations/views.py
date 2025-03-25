@@ -1,31 +1,24 @@
 from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
-from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-
-from .models import UserProfile
-from .forms import CustomUserCreationForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
 from datetime import datetime
-from django.shortcuts import render
-from transformers import AutoTokenizer, AutoModel
-import torch
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from .models import Movie, Community, Post
-import json
-import random  # ✅ Add randomness
 
-from django.shortcuts import render
+import json
 import torch
 from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pickle
 from deep_translator import GoogleTranslator
-from .models import Movie
+
+from .forms import CustomUserCreationForm
+from .models import Community, Post, Comment, Poll, Hashtag, Movie  # Combined all model imports
+from django.shortcuts import render, redirect
+from .forms import ProfileUpdateForm
+from .models import UserProfile
 
 # ✅ โหลดโมเดล
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
@@ -152,17 +145,6 @@ def definition_movies(request):
     return render(request, "definition_movies.html", {"movies": recommended_movies[:5], "search_query": query_text})
 
 
-# def movie_detail(request, movie_id):
-#     movie = get_object_or_404(Movie, id=movie_id)
-#     data = {
-#         "english_title": movie.title_en,  # Ensure your field names match
-#         "thai_title": movie.title_th,
-#         "release_date": movie.release_date.strftime("%Y"),
-#         "description": movie.description,
-#     }
-#     return JsonResponse(data)
-
-
 def login_view(request):
     return render(request, 'login.html')
 
@@ -176,35 +158,6 @@ def movie_detail(request, movie_id):
     return render(request, 'movies_detailed.html', {'movie': movie})
 
 
-# Function to convert text to embeddings
-# def get_embeddings(text):
-#     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-#     outputs = model(**inputs)
-#     return outputs.last_hidden_state.mean(dim=1)
-
-
-# # Genre mapping dictionary
-# GENRE_MAPPING = {
-#     "Action": "บู๊",
-#     "Adventure": "ผจญ",
-#     "Crime": "อาชญากรรม",
-#     "Drama": "หนังชีวิต",
-#     "Thriller": "ระทึกขวัญ",
-#     "Horror": "สยองขวัญ",
-#     "Animation": "แอนนิเมชั่น",
-#     "Fantasy": "จินตนาการ",
-#     "Romance": "หนังรักโรแมนติก",
-#     "Science Fiction": "นิยายวิทยาศาสตร์",
-#     "Documentary": "สารคดี",
-#     "Comedy": "ตลก",
-#     "Western": "หนังคาวบอยตะวันตก",
-#     "Mystery": "ลึกลับ",
-#     "War": "สงคราม",
-#     "History": "ประวัติศาสตร์",
-#     "Music": "ดนตรี",
-#     "Family": "ครอบครัว",
-#     "TV Movie": "ภาพยนตร์โทรทัศน์"
-# }
 GENRE_MAPPING = {
     "Action": "บู๊",
     "Crime": "อาชญากรรม",
@@ -486,10 +439,17 @@ def recommend_movies_advanced(request):
 
     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
 
-# Homepage Function
-# def homepage(request):
-#     movies = Movie.objects.all().order_by('-popularity')[:10]  # ดึงมาแค่ 10 เรื่อง
-#     return render(request, 'homepage.html', {'movies': movies})
+def movies_advance(request):
+    # Fetch recommended movies from the session (if any)
+    recommended_movies = request.session.get('recommended_movies', [])
+
+    # If no movies in the session, you can fetch all movies or any specific category
+    if not recommended_movies:
+        recommended_movies = Movie.objects.all()
+
+    # Pass the movies to the template
+    return render(request, 'movies_advance.html', {'movies': recommended_movies})
+
 @login_required
 def homepage(request):
     movies = Movie.objects.filter(content_type="Movie")[:10]
@@ -503,19 +463,6 @@ def homepage(request):
         'series': series
     })
 
-
-# @login_required
-# def settings_view(request):
-#     user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-#
-#     context = {
-#         "username": request.user.username,
-#         "email": request.user.email,
-#         "preferences": user_profile.preferences,
-#         "history": user_profile.history,
-#         "is_first_login": user_profile.is_first_login,
-#     }
-#     return render(request, "settings.html", context)
 
 ALL_GENRES = [
     "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
@@ -553,11 +500,6 @@ def save_preferences(request):
         return JsonResponse({"success": True})  # ✅ Return JSON success response
 
     return render(request, "edit_preferences.html")
-
-
-from django.shortcuts import render, redirect
-from .forms import ProfileUpdateForm
-from .models import UserProfile
 
 
 def update_profile(request):
@@ -619,95 +561,7 @@ def update_profile(request):
     return render(request, 'update_profile.html', {'form': form})
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Community, Post, Comment, Like
-from .forms import PostForm, CommentForm  # Assume you have these forms
 
-# def community_home(request):
-#     # Get the selected community from the query parameters (GET request)
-#     selected_club = request.GET.get('club')  # Get the selected club ID from the request
-#     communities = Community.objects.all()  # Get all communities
-#     posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
-#
-#     if selected_club:
-#         # Filter posts by selected community
-#         community = get_object_or_404(Community, id=selected_club)
-#         posts = Post.objects.filter(community=community).order_by('-created_at')
-#
-#     if request.method == 'POST':
-#         content = request.POST.get('content')
-#         image = request.FILES.get('image')  # To handle image uploads
-#
-#         # Ensure the community is valid
-#         community_id = request.POST.get('community_id')
-#         community = get_object_or_404(Community, id=community_id)
-#
-#         # Create the post
-#         Post.objects.create(community=community, user=request.user, content=content, image=image)
-#
-#         return redirect('community_home')  # Redirect to reload the page with the new post
-#
-#     # Handle comment submission
-#     if request.method == 'POST' and 'comment' in request.POST:
-#         post_id = request.POST.get('post_id')
-#         post = get_object_or_404(Post, id=post_id)
-#         comment_content = request.POST.get('comment')  # Get comment content
-#
-#         # Create a new comment linked to the post and the current user
-#         Comment.objects.create(post=post, user=request.user, content=comment_content)
-#
-#         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))  # Redirect back to the current page
-#
-#     return render(request, 'communities.html', {
-#         'communities': communities,
-#         'posts': posts,
-#     })
-
-
-# def community_home(request):
-#     selected_club = request.GET.get('club')
-#     communities = Community.objects.all()
-#     posts = Post.objects.all().order_by('-created_at')  # Show all posts by default
-#
-#     if selected_club:
-#         community = get_object_or_404(Community, name=selected_club)
-#         posts = Post.objects.filter(community=community).order_by('-created_at')
-#
-#     if request.method == 'POST':
-#         if 'comment' in request.POST:  # Check if the form is for submitting a comment
-#             post_id = request.POST.get('post_id')
-#             comment_content = request.POST.get('comment')
-#             post = get_object_or_404(Post, id=post_id)
-#
-#             # Create the comment
-#             Comment.objects.create(post=post, user=request.user, content=comment_content)
-#             return redirect('community_home')  # Redirect to the same page
-#
-#         content = request.POST.get('content')
-#         image = request.FILES.get('image')  # Handle image uploads
-#
-#         # Ensure the community is valid
-#         community_id = request.POST.get('community_id')
-#         community = get_object_or_404(Community, id=community_id)
-#
-#         # Create the post
-#         Post.objects.create(community=community, user=request.user, content=content, image=image)
-#
-#         return redirect('community_home')  # Reload the page with the new post
-#
-#     return render(request, 'communities.html', {
-#         'communities': communities,
-#         'posts': posts,
-#     })
-
-
-from django.utils.html import escape
-import re
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Poll, Hashtag, Community
-from django.contrib.auth.models import User
 
 
 @login_required
@@ -868,13 +722,3 @@ def delete_post(request, post_id):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-def movies_advance(request):
-    # Fetch recommended movies from the session (if any)
-    recommended_movies = request.session.get('recommended_movies', [])
-
-    # If no movies in the session, you can fetch all movies or any specific category
-    if not recommended_movies:
-        recommended_movies = Movie.objects.all()
-
-    # Pass the movies to the template
-    return render(request, 'movies_advance.html', {'movies': recommended_movies})

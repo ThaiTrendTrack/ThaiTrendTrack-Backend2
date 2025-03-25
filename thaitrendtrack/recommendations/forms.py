@@ -1,6 +1,7 @@
-from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django import forms
+from .models import Post, Comment
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -40,10 +41,6 @@ class ProfileUpdateForm(forms.ModelForm):
         }
 
 
-from django import forms
-from .models import Post, Comment
-
-
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
@@ -52,6 +49,7 @@ class PostForm(forms.ModelForm):
     # Poll Choices field as a simple form input
     poll_choices = forms.CharField(widget=forms.Textarea, required=False,
                                    help_text="Enter poll options as comma separated values.")
+
 
 class CommentForm(forms.ModelForm):
     class Meta:

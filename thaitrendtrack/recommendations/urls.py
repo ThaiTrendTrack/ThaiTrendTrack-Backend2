@@ -1,9 +1,8 @@
-from django.contrib.auth.views import LoginView
-from django.urls import path, include
+from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 from django.contrib import admin
-from .views import movie_detail, search_movies, recommend_movies, custom_login, definition_movies, movies_by_category, \
+from .views import recommend_movies, custom_login, definition_movies, movies_by_category, \
     save_preferences, update_profile
 from django.conf import settings
 from django.conf.urls.static import static

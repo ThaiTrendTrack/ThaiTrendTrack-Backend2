@@ -1,5 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
+import torch
+from transformers import AutoTokenizer, AutoModel
+import numpy as np
+import pickle
 
 
 class UserProfile(models.Model):
@@ -13,13 +17,6 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
-
-from django.db import models
-import torch
-from transformers import AutoTokenizer, AutoModel
-import numpy as np
-import pickle
-import json
 
 # ✅ โหลดโมเดล
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
@@ -82,10 +79,6 @@ class Movie(models.Model):
 
     def __str__(self):
         return f"{self.title_th} ({self.title_en})"
-
-
-from django.db import models
-from django.contrib.auth.models import User
 
 
 class Community(models.Model):
