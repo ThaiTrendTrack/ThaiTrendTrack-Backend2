@@ -106,13 +106,29 @@ class Hashtag(models.Model):
 class Poll(models.Model):
     question = models.CharField(max_length=255)
     choices = models.JSONField()  # To store choices in a JSON format
-    # created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.question
 
     def get_choices(self):
         return self.choices
+
+    def get_vote_count(self):
+        return self.votes.count()
+
+    def get_vote_percentages(self):
+        total_votes = self.get_vote_count()
+        vote_percentages = {}
+        for choice in self.choices:
+            count = self.votes.filter(choice=choice).count()
+            percentage = (count / total_votes * 100) if total_votes > 0 else 0
+            vote_percentages[choice] = percentage
+        return vote_percentages
+
+    def leading_choice(self):
+        vote_percentages = self.get_vote_percentages()
+        return max(vote_percentages, key=vote_percentages.get), max(vote_percentages.values())
+
 
 
 class Post(models.Model):

@@ -541,14 +541,24 @@ def settings_view(request):
 #
 #     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
 
-# Function to load precomputed movie embeddings
+# Load pre-trained tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+model = AutoModel.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+
 def load_embeddings():
     embedding_file = os.path.join(settings.BASE_DIR, 'movie_embeddings.pkl')
     print(f"Loading embeddings from: {embedding_file}")  # Log the full path
     try:
         with open(embedding_file, "rb") as f:
             embeddings = pickle.load(f)
-        print(f"Loaded {len(embeddings)} movie embeddings.")
+
+        # Check if embeddings are loaded correctly
+        if not embeddings:
+            print("❌ Error: Embeddings file is empty.")
+        else:
+            print(f"Loaded {len(embeddings)} movie embeddings.")
+
         return np.array(embeddings).reshape(len(embeddings), -1)
     except FileNotFoundError:
         print("❌ Error: Embeddings file not found. Please generate embeddings first.")
@@ -557,13 +567,19 @@ def load_embeddings():
 
 # Function to get text embeddings from description
 def get_embedding_advanced(text):
+    if not text.strip():  # Check if the description is empty or contains only spaces
+        return np.array([])  # Return an empty array if the description is invalid
+
     prompt = f"ให้คำแนะนำหนังที่ตรงกับคำอธิบายต่อไปนี้: '{text}' โดยคำนึงถึงแนวหนัง เรื่องย่อ และความนิยม"
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
         outputs = model(**inputs)
 
-    # Reshape the embedding to ensure it's 2D, as required by cosine_similarity
-    return outputs.last_hidden_state[:, 0, :].squeeze(0).reshape(1, -1).numpy()  # Ensure it is 2D
+    # Ensure the embedding is 2D (1 sample with 768 features)
+    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0).numpy()
+
+    # Ensure it's 2D for cosine similarity
+    return embedding.reshape(1, -1)  # Reshape to ensure it's 2D
 
 
 @csrf_exempt
@@ -578,8 +594,6 @@ def recommend_movies_advanced(request):
             description = data.get('description', "")
             start_date = data.get('start_date', "")
             end_date = data.get('end_date', "")
-
-            print(f"Received data: {data}")
 
             # Check if at least one filter is provided
             if not any([genre, cast, description, start_date, end_date]):
@@ -596,44 +610,34 @@ def recommend_movies_advanced(request):
 
             if genre:
                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
-                print(f"Filtered by genre: {genre}, movies found: {filtered_movies.count()}")
 
             if cast:
                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
-                print(f"Filtered by cast: {cast}, movies found: {filtered_movies.count()}")
 
             if start_date and end_date:
                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
-                print(f"Filtered by date range: {start_date} to {end_date}, movies found: {filtered_movies.count()}")
-
-            # Check if any movies are left after filtering
-            if not filtered_movies:
-                print("No movies found after applying filters.")
-                return JsonResponse({"error": "No movies found after applying filters."}, status=400)
 
             # If description is provided, use embeddings to find the most relevant movies
             if description:
-                print(f"Generating embedding for description: {description}")
                 user_embedding = get_embedding_advanced(description)
-                print(f"User embedding shape: {user_embedding.shape}")
 
-                # Ensure the user embedding is valid (2D)
-                if user_embedding.shape[1] == 0:
-                    return JsonResponse({"error": "User embedding has zero features."}, status=400)
+                # Check if the user_embedding is empty
+                if user_embedding.size == 0:  # If empty, return an error
+                    return JsonResponse({"error": "Description is too short or empty for embedding."}, status=400)
 
                 movie_embeddings_list = []
+
                 for movie in filtered_movies:
-                    # Load embedding from database
                     if movie.embedding:
                         movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
                         movie_embeddings_list.append(movie_embedding)
 
-                # Ensure the movie embeddings list is not empty
-                if not movie_embeddings_list:
-                    return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
-
+                # Ensure the movie embeddings are reshaped correctly
                 movie_embeddings_array = np.array(movie_embeddings_list)
-                print(f"Movie embeddings shape: {movie_embeddings_array.shape}")
+
+                # Check if movie_embeddings_array is valid
+                if movie_embeddings_array.size == 0:  # Check if movie embeddings are empty
+                    return JsonResponse({"error": "No movie embeddings available."}, status=400)
 
                 # Compute cosine similarity between user description and movie embeddings
                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
@@ -664,10 +668,10 @@ def recommend_movies_advanced(request):
             })
 
         except Exception as e:
-            print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
+
 
 def movies_advance(request):
     # Fetch recommended movies from the session (if any)
@@ -879,6 +883,7 @@ def community_home(request):
     communities = Community.objects.all()
     posts = Post.objects.all().order_by('-created_at')
 
+    # Filter posts by selected club
     if selected_club:
         community = get_object_or_404(Community, name=selected_club)
         posts = Post.objects.filter(community=community).order_by('-created_at')
@@ -921,31 +926,37 @@ def community_home(request):
         for key in request.POST:
             if key.startswith("poll_choice_"):
                 poll_choices.append(request.POST[key])
+
+        # If poll question and choices are provided, create a new poll
         if poll_question and poll_choices:
             poll = Poll.objects.create(
                 question=poll_question,
                 choices=poll_choices  # Store choices as a list
             )
-        new_post.poll = poll
-        new_post.save()
-
-        # Display poll choices and their counts
-        for post in posts:
-            if post.poll:
-                post.poll.vote_counts = {
-                    choice: post.poll.votes.filter(choice=choice).count()
-                    for choice in post.poll.choices
-                }
+            new_post.poll = poll
+            new_post.save()
 
         return redirect('community_home')
 
-    # Calculate vote counts for each post with polls
+    # Calculate vote counts and percentages for each post with polls
     for post in posts:
         if post.poll:
-            post.poll.vote_counts = {
-                choice: post.poll.votes.filter(choice=choice).count()
-                for choice in post.poll.choices
-            }
+            vote_counts = {choice: post.poll.votes.filter(choice=choice).count() for choice in post.poll.choices}
+            total_votes = sum(vote_counts.values())
+
+            # Calculate vote percentages
+            vote_percentages = {choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in
+                                vote_counts.items()}
+
+            # Find the leading choice and its percentage
+            leading_choice = max(vote_percentages, key=vote_percentages.get, default=None)
+            leading_percent = vote_percentages.get(leading_choice, 0)
+
+            # Add vote counts and percentages to the post
+            post.poll.vote_counts = vote_counts
+            post.poll.vote_percentages = vote_percentages
+            post.poll.leading_choice = leading_choice
+            post.poll.leading_percent = leading_percent
 
     return render(request, 'communities.html', {
         'communities': communities,
@@ -1107,3 +1118,33 @@ def vote(request, post_id):
     )
 
     return redirect('community_home')  # Or wherever you want to redirect
+
+@login_required
+def vote_poll(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    poll = post.poll
+
+    if request.method == 'POST':
+        choice = request.POST.get('poll_choice')
+        if choice is not None:
+            # Create a new vote for the selected choice
+            Vote.objects.create(
+                user=request.user,
+                poll=poll,
+                choice=poll.choices[int(choice)]
+            )
+
+            # Update vote counts and percentages
+            poll.vote_counts = {choice: poll.votes.filter(choice=choice).count() for choice in poll.choices}
+            total_votes = sum(poll.vote_counts.values())
+
+            poll.vote_percentages = {
+                choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in poll.vote_counts.items()
+            }
+            poll.leading_choice = max(poll.vote_percentages, key=poll.vote_percentages.get)
+            poll.leading_percent = poll.vote_percentages[poll.leading_choice]
+            poll.save()
+
+            return redirect('community_home')  # Redirect to the community home page
+
+    return redirect('community_home')  # If not POST, redirect back to home

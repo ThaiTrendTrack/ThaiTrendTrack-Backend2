@@ -42,4 +42,6 @@ urlpatterns = [
     path('poll/<int:poll_id>/results/', views.poll_results, name='poll_results'),
     path('community/', views.community_home, name='community_home'),
     path('poll/<int:post_id>/vote/', views.vote, name='vote'),
+    path('vote_poll/<int:post_id>/', views.vote_poll, name='vote_poll'),
+
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

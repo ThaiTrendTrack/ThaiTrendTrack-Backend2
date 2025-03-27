@@ -18,15 +18,15 @@
       }
 
       nav {
-        position: fixed;
-        width: 100%;
-        height: 90px;
-        display: flex;
-        /*justify-content: space-between;*/
-        align-items: center;
-        background-color: white;
-        padding: 0 5px;
-        z-index: 999999;
+       position: fixed;
+       width: 100%;
+       height: 90px;
+       display: flex;
+       align-items: center;
+       justify-content: space-between; /* Logo + menu on the left, icons on the right */
+       background-color: white;
+       padding: 0 5px;
+       z-index: 999999;
       }
 
       ul {
@@ -40,7 +40,7 @@
       }
 
       .logo img {
-        width: 80px;
+        width: 84px;
         height: auto;
         padding-top: 9px;
         padding-left: 15px;
@@ -72,8 +72,9 @@
 
 
       .left-nav {
-            display: flex;
-            align-items: center;
+          display: flex;
+          align-items: center;
+          margin-left: 15px; /* Just a small left padding if desired */
       }
 
 
@@ -116,9 +117,10 @@
     }
 
       .nav-icons {
-        display: flex;
-        align-items: center;
-        margin-left: 25px;
+          display: flex;
+          align-items: center;
+          /* margin-left: -90px; <-- remove negative margin */
+          margin-right: 15px; /* optional to space from the right edge */
       }
 
       .nav-icons a {
@@ -188,155 +190,210 @@
         margin: 0 8px;
       }
 
-.search-container {
-    display: flex;
-    justify-content: space-between; /* ให้ input กับปุ่มอยู่ข้างกัน */
-    align-items: center;
-    background: white;
-    border-radius: 24px;
-    overflow: hidden;
-    width:300px;  /* ลดขนาดความกว้างของ search bar */
-    height: 42px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-    border: 1.5px solid black;
-    z-index: 999999;
-    margin-left: 20px;
-    padding: 0 10px;
-}
+      .search-container {
+          display: flex;
+          align-items: center;
+          background: white;
+          border-radius: 24px;
+          width: 300px;  /* Size as desired */
+          height: 42px;
+          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+          border: 1.5px solid black;
+          z-index: 999999;
+          /* margin-left: -30px; <-- remove negative margin */
+          margin-left: 30px; /* optional positive margin if you want a gap after the menu */
+          padding: 0 10px;
+      }
 
-.search-input {
-    font-size: 14px;
-    font-family: 'Poppins', sans-serif;
-    color: black;
-    border: none;
-    background: transparent;
-    flex-grow: 1; /* ให้ input ขยายเต็มพื้นที่ */
-    padding: 10px;
-    outline: none;
-    margin-right: 5px; /* ลดระยะห่างระหว่าง input กับปุ่ม */
-    max-width: 250px;  /* จำกัดขนาดของ input */
-}
-
-.search-button {
-    background: transparent;
-    border: none;
-    color: #DC0856;
-    font-size: 18px;
-    padding: 10px 14px;
-    cursor: pointer;
-    border-radius: 0 24px 24px 0; /* ปรับมุมขวาของปุ่ม */
-}
-
-/* Ensure the search icon is pushed to the right */
-.search-bar {
-    display: flex;
-    justify-content: space-between;
-    width: 100%; /* Makes sure it takes up full width of the container */
-}
-
-.material-symbols-outlined {
-    margin-left: auto; /* Pushes the icon to the far right */
-}
-
-.advanced-search-btn {
-    background: #DC0856;
-    color: white;
-    border: none;
-    font-size: 14px;
-    font-weight: bolder;
-    padding: 10px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: 0.3s;
-    margin-left: 5px;  /* ลดระยะห่างจาก input */
-}
-
- .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .popup {
-            background: white;
-            padding: 20px;
-            width: 400px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .popup h2 {
-            margin: 0 0 15px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .popup label {
+      .search-input {
             font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .popup input, .popup select {
-            width: 100%;
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .popup-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        .cancel-btn, .apply-btn {
-            padding: 10px 16px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .cancel-btn {
-            background: lightgrey;
+            font-family: 'Poppins', sans-serif;
             color: black;
-        }
-
-        .apply-btn {
-            background: #DC0856;
-            color: white;
             border: none;
-        }
+            background: transparent;
+            flex-grow: 1; /* ให้ input ขยายเต็มพื้นที่ */
+            padding: 10px;
+            outline: none;
+            margin-right: 5px; /* ลดระยะห่างระหว่าง input กับปุ่ม */
+            max-width: 250px;  /* จำกัดขนาดของ input */
+      }
 
-        .apply-btn:hover {
-            background: black;
-        }
+      .search-button {
+            background: transparent;
+            border: none;
+            color: #DC0856;
+            font-size: 18px;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 0 24px 24px 0; /* ปรับมุมขวาของปุ่ม */
+      }
 
-        .popup input[type="date"] {
-            width: 48%;
-        }
-
-        .popup .date-range {
+        /* Ensure the search icon is pushed to the right */
+      .search-bar {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            width: 100%; /* Makes sure it takes up full width of the container */
+      }
+
+      .material-symbols-outlined {
+            margin-left: auto; /* Pushes the icon to the far right */
+      }
+
+      .advanced-search-btn {
+              background: #DC0856;
+              color: white;
+              border: none;
+              font-size: 14px;
+              font-weight: bolder;
+              padding: 10px 16px;
+              border-radius: 10px;
+              cursor: pointer;
+              transition: 0.3s;
+              /* margin-left: -75px; <-- remove negative margin */
+              margin-left: 20px; /* small positive margin for spacing */
+      }
+
+      .popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+      }
+
+      .popup {
+                background: white;
+                padding: 20px;
+                width: 400px;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+      }
+
+      .popup h2 {
+                margin: 0 0 15px;
+                font-size: 20px;
+                font-weight: bold;
+      }
+
+      .popup label {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 5px;
+      }
+
+      .popup input, .popup select {
+                width: 100%;
+                padding: 8px;
+                font-size: 14px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-bottom: 10px;
+      }
+
+      .popup-actions {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 10px;
+      }
+
+      .cancel-btn, .apply-btn {
+                padding: 10px 16px;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+      }
+
+      .cancel-btn {
+                background: lightgrey;
+                color: black;
+      }
+
+      .apply-btn {
+                background: #DC0856;
+                color: white;
+                border: none;
+      }
+
+      .apply-btn:hover {
+                background: black;
+      }
+
+      .popup input[type="date"] {
+                width: 48%;
+      }
+
+      .popup .date-range {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+      }
+
+      .popup .date-range input {
+                width: 48%;
+      }
+
+      .dropdown {
+        position: relative;
+      }
+
+      .dropdown {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          outline: none;
+          font-size: 14px;
+          font-weight: bold;
+          font-family: 'Poppins', sans-serif;
+          width: auto;
         }
 
-        .popup .date-range input {
-            width: 48%;
+      .dropdown .icon {
+        cursor: pointer;
+      }
+
+      .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: white;
+          border: 2px solid #ddd;
+          border-radius: 5px;
+          min-width: 100px;
+          z-index: 9999;
+          right: 0;
+          top: 27px;
+          margin-top: 1.5px;
         }
+
+        .dropdown-content a {
+          color: black;
+          padding: 8px 12px;
+          text-decoration: none;
+          display: block;
+          font-size: 14px;
+          text-align: center;
+          white-space: nowrap; /* Prevent line breaks, keep “Log out” together */
+        }
+
+        .dropdown-content a:hover {
+          background-color: white;
+          color: #DC0856;
+        }
+
+        .dropdown:hover .dropdown-content {
+          display: block;
+          background-color: white;
+        }
+
+
 
 </style>
 </head>
@@ -345,7 +402,7 @@
     <nav>
       <div class="left-nav flex-center">
         <div class="logo">
-            <img src="{'http://127.0.0.1:8000/static/logo/TTT-logo3.png'}" alt="logo">
+          <img src="/static/logo/TTT-logo3.png" alt="logo">
         </div>
         <div class="menu">
           <ul>
@@ -380,11 +437,8 @@
     });
 </script>
 
-
-
-
       <div class="nav-icons">
-          <a href="/community/">
+          <a href="{% url 'home' %}">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/>
               </svg>
@@ -404,11 +458,21 @@
               </svg>
           </a>
 
-          <a href="{% url 'home' %}">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
-                  <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
-              </svg>
-          </a>
+          <div class="dropdown" >
+              <li class="icon">
+                  <a class="flex-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+                          <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
+                      </svg>
+                  </a>
+                  <div class="dropdown-content">
+                      <a href="{% url '//' %}">About</a>
+                      <a href="{% url 'settings' %}">Settings</a>
+                      <a href="{% url 'logout' %}">Log out</a>
+                  </div>
+              </li>
+          </div>
+
           <span class="line">|</span>
           <div class="user">
               <li class="menu-text"><a href="/login/">Log in</a></li>
@@ -417,13 +481,9 @@
 
 <!--          <h3 class="name">NichaParich02</h3>-->
 
-          <a href="/settings/">
-	        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar">
-
-          </a>
-<!--          <a href="{% url '//' %}">-->
-<!--	        <img src="../static/icons/NichaParich.png" alt="Profile Photo" class="profile-photo">-->
-<!--          </a>-->
+            <a href="{% url '//' %}">
+                <img src="../static/icons/user.png" alt="Profile Photo" class="profile-photo">
+            </a>
       </div>
     </nav>
 
