@@ -59,7 +59,7 @@
                     Trends Now
                     </a>
                     <span class="divider">|</span>
-                    <a href="{% url 'homepage' %}" class="movie-link ct-text">
+                    <a href="/recommend/" class="movie-link ct-text">
                      <img src="{% static 'icons/user.png' %}" alt="for-you" class="arrow-icon" width="32" height="32"> For You
                     </a>
                     <span class="divider">|</span>
@@ -93,7 +93,7 @@
                         <ul class="carousel" id="genre-carousel">
                              <li class="card genre-item"><a href="{% url 'movies_by_category' 'Action' %}"><span>Action</span></a></li>
                              <li class="card genre-item"><a href="{% url 'movies_by_category' 'Adventure' %}"><span>Adventure</span></a></li>
-                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Animation' %}"><span>Animation</span></a></li>
+<!--                             <li class="card genre-item"><a href="{% url 'movies_by_category' 'Animation' %}"><span>Animation</span></a></li>-->
                              <li class="card genre-item"><a href="{% url 'movies_by_category' 'Comedy' %}"><span>Comedy</span></a></li>
                              <li class="card genre-item"><a href="{% url 'movies_by_category' 'Crime' %}"><span>Crime</span></a></li>
                              <li class="card genre-item"><a href="{% url 'movies_by_category' 'Documentary' %}"><span>Documentary</span></a></li>
@@ -367,7 +367,7 @@
 
     </div>
 
-    <script>
+<script>
         document.addEventListener('DOMContentLoaded', () => {
             // Load the external navbar
             fetch("{% static 'components/side_header.html' %}?v=" + new Date().getTime())
@@ -415,104 +415,17 @@
         function openPopup() { document.getElementById("popupOverlay").style.display = "flex"; }
         function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
     </script>
-function submitAdvancedSearch() {
-    const genre = document.querySelector('select').value;
-    const cast = document.querySelector('input[placeholder="Enter cast name"]').value;
-    const description = document.querySelector('input[placeholder="Enter description"]').value;
-    const startDate = document.getElementById('start-date').value;
-    const endDate = document.getElementById('end-date').value;
-
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    const data = {
-        genre,
-        cast,
-        description,
-        start_date: startDate,
-        end_date: endDate
-    };
-
-    fetch('/recommend_advanced/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,  // ส่ง CSRF Token ผ่าน header
-        },
-        body: JSON.stringify(data)  // แปลงข้อมูลเป็น JSON
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Backend response:', data);
-        if (data.success) {
-            window.location.href = '/movies_advance/';  // Redirect after success
-        } else {
-            console.error('Error:', data.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
-<!--<script src="img-slider.js" defer></script>-->
-<!--<script>-->
-<!--        document.addEventListener("DOMContentLoaded", function () {-->
-<!--            console.log("✅ img-slider.js loaded!");  // Check if script runs-->
-
-<!--            let currentIndex = 0;-->
-<!--            const items = document.querySelectorAll(".img-slider .list .item");-->
-<!--            const totalItems = items.length;-->
-<!--            const slider = document.querySelector(".img-slider .list");-->
-<!--            const dots = document.querySelectorAll(".dots li");-->
-<!--            const nextButton = document.getElementById("next");-->
-<!--            const prevButton = document.getElementById("prev");-->
-
-<!--            if (!slider || items.length === 0) {-->
-<!--                console.error("❌ Slider not found or no items!");-->
-<!--                return;-->
-<!--            }-->
-
-<!--            function updateSlider(index) {-->
-<!--                slider.style.transform = `translateX(-${index * 100}%)`;-->
-<!--                dots.forEach(dot => dot.classList.remove("active"));-->
-<!--                dots[index].classList.add("active");-->
-<!--            }-->
-
-<!--            function nextSlide() {-->
-<!--                currentIndex = (currentIndex + 1) % totalItems;-->
-<!--                updateSlider(currentIndex);-->
-<!--            }-->
-
-<!--            function prevSlide() {-->
-<!--                currentIndex = (currentIndex - 1 + totalItems) % totalItems;-->
-<!--                updateSlider(currentIndex);-->
-<!--            }-->
-
-<!--            nextButton?.addEventListener("click", nextSlide);-->
-<!--            prevButton?.addEventListener("click", prevSlide);-->
-
-<!--            dots.forEach((dot, index) => {-->
-<!--                dot.addEventListener("click", () => {-->
-<!--                    currentIndex = index;-->
-<!--                    updateSlider(currentIndex);-->
-<!--                });-->
-<!--            });-->
-
-<!--            setInterval(nextSlide, 5000);-->
-<!--        });-->
-
-
-<!--    </script>-->
 <script>
 function submitAdvancedSearch() {
-    // Get form field values
     const genre = document.querySelector('select').value;
     const cast = document.querySelector('input[placeholder="Enter cast name"]').value;
     const description = document.querySelector('input[placeholder="Enter description"]').value;
     const startDate = document.getElementById('start-date').value;
     const endDate = document.getElementById('end-date').value;
 
-    // Get CSRF token from the page
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    console.log("Submitted data:", { genre, cast, description, startDate, endDate });
 
+    // Prepare the data to be sent to the backend
     const data = {
         genre,
         cast,
@@ -521,28 +434,72 @@ function submitAdvancedSearch() {
         end_date: endDate
     };
 
-    console.log("Form data: ", data);  // Debugging step to check what is sent
-
-    // Make the POST request
-    fetch('/recommend_advanced/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,  // CSRF token is included in the request headers
-        },
+    // Send data to the backend using POST request
+    fetch("/recommend_advanced/", {
+        method: 'POST',  // Ensure it's POST
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         console.log('Backend response:', data);
         if (data.success) {
-            window.location.href = '/movies_advance/';  // Redirect after success
-        } else {
-            console.error('Error:', data.error);
+            // Redirect to the 'movies_advance' page after successful recommendation
+            window.location.href = '/movies_advance/';  // Redirect to the page showing recommended movies
         }
     })
     .catch(error => console.error('Error:', error));
 }
 </script>
+<script src="img-slider.js" defer></script>
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("✅ img-slider.js loaded!");  // Check if script runs
+
+            let currentIndex = 0;
+            const items = document.querySelectorAll(".img-slider .list .item");
+            const totalItems = items.length;
+            const slider = document.querySelector(".img-slider .list");
+            const dots = document.querySelectorAll(".dots li");
+            const nextButton = document.getElementById("next");
+            const prevButton = document.getElementById("prev");
+
+            if (!slider || items.length === 0) {
+                console.error("❌ Slider not found or no items!");
+                return;
+            }
+
+            function updateSlider(index) {
+                slider.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach(dot => dot.classList.remove("active"));
+                dots[index].classList.add("active");
+            }
+
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateSlider(currentIndex);
+            }
+
+            function prevSlide() {
+                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+                updateSlider(currentIndex);
+            }
+
+            nextButton?.addEventListener("click", nextSlide);
+            prevButton?.addEventListener("click", prevSlide);
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener("click", () => {
+                    currentIndex = index;
+                    updateSlider(currentIndex);
+                });
+            });
+
+            setInterval(nextSlide, 5000);
+        });
+
+
+    </script>
+
 </body>
 </html>

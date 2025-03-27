@@ -407,21 +407,26 @@
         <div class="menu">
           <ul>
             <li class="menu-text"><a href="/homepage/">Home</a></li>
-            <li class="menu-text"><a href="{% url 'movies' %}">Movies</a></li>
-            <li class="menu-text"><a href="{% url 'series' %}">Series</a></li>
-            <li class="menu-text"><a href="{% url 'drama' %}">Drama</a></li>
+            <li class="menu-text"><a href="/homepage/">Movies</a></li>
+            <li class="menu-text"><a href="/homepage/">Series</a></li>
+            <li class="menu-text"><a href="/homepage/">Drama</a></li>
           </ul>
         </div>
       </div>
 
-<!-- Center Section: Search Bar -->
-<div class="search-container">
-    <form action="{% url 'recommend' %}" method="get" class="search-bar">
+    <!-- Center Section: Search Bar -->
+    <div class="search-container">
+     <!-- In side_header.html -->
+
+    <form action="{% url 'search_movies_by_title' %}" method="get" class="search-bar">
         <input type="text" class="search-input" name="searchQuery" placeholder="Search..." required>
         <button type="submit" class="search-button">
             <span class="material-symbols-outlined">search</span>
         </button>
     </form>
+
+
+
 </div><button class="advanced-search-btn" onclick="openPopup()">Advanced Search</button>
 
 
@@ -438,7 +443,7 @@
 </script>
 
       <div class="nav-icons">
-          <a href="{% url 'home' %}">
+          <a href="/community/">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/>
               </svg>
@@ -452,7 +457,7 @@
               </svg>
           </a>
 
-          <a href="{% url 'home' %}">
+          <a href="/homepage/">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/>
               </svg>
@@ -467,8 +472,8 @@
                   </a>
                   <div class="dropdown-content">
                       <a href="{% url '//' %}">About</a>
-                      <a href="{% url 'settings' %}">Settings</a>
-                      <a href="{% url 'logout' %}">Log out</a>
+                      <a href="/settings/">Settings</a>
+                      <a href="/logout/">Log out</a>
                   </div>
               </li>
           </div>

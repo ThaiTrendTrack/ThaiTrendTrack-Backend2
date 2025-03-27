@@ -13,7 +13,7 @@ urlpatterns = [
     path('login/', custom_login, name='login'),
     path('signup/', views.login_view, name='signup'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('', views.signup, name='signup'),
+    path('', views.homepage, name='homepage'),
     path('homepage/', views.homepage, name='homepage'),
     path('admin/', admin.site.urls),
     path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'),
@@ -43,5 +43,7 @@ urlpatterns = [
     path('community/', views.community_home, name='community_home'),
     path('poll/<int:post_id>/vote/', views.vote, name='vote'),
     path('vote_poll/<int:post_id>/', views.vote_poll, name='vote_poll'),
+    path('search_movie_by_title/', views.search_movie_by_title, name='search_movies_by_title'),
+    path('logout/', views.logout_view, name='logout'),
 
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

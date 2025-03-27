@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import login as auth_login, logout
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
@@ -37,6 +37,11 @@ try:
 except FileNotFoundError:
     print("❌ Error: Embeddings file not found. Please generate embeddings first.")
     movie_embeddings = None
+
+
+def logout_view(request):
+    logout(request)  # This will log the user out
+    return redirect('homepage')
 
 
 # ✅ ฟังก์ชันแปลภาษาเป็นไทย
@@ -323,7 +328,16 @@ def get_embeddings(text):
     return outputs.last_hidden_state.mean(dim=1).detach().numpy()
 
 
-# Function to handle movie search
+def search_movie_by_title(request):
+    query = request.GET.get('searchQuery', '')
+    if query:
+        # Filter movies based on the title (support multiple languages if needed)
+        movies = Movie.objects.filter(title_en__icontains=query) | Movie.objects.filter(title_th__icontains=query)
+    else:
+        movies = Movie.objects.all()
+    return render(request, 'movies_search.html', {'movies': movies})
+
+
 def search_movies(request):
     if request.method == "GET":
         query = request.GET.get("searchQuery", "").strip()
@@ -546,41 +560,134 @@ tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xn
 model = AutoModel.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 
 
+# Function to load precomputed movie embeddings
+# Load embeddings
 def load_embeddings():
-    embedding_file = os.path.join(settings.BASE_DIR, 'movie_embeddings.pkl')
-    print(f"Loading embeddings from: {embedding_file}")  # Log the full path
+    embedding_file = "movie_embeddings.pkl"
     try:
         with open(embedding_file, "rb") as f:
             embeddings = pickle.load(f)
-
-        # Check if embeddings are loaded correctly
-        if not embeddings:
-            print("❌ Error: Embeddings file is empty.")
-        else:
-            print(f"Loaded {len(embeddings)} movie embeddings.")
-
         return np.array(embeddings).reshape(len(embeddings), -1)
     except FileNotFoundError:
-        print("❌ Error: Embeddings file not found. Please generate embeddings first.")
+        print("❌ Error: Embeddings file not found.")
         return None
 
 
-# Function to get text embeddings from description
 def get_embedding_advanced(text):
-    if not text.strip():  # Check if the description is empty or contains only spaces
-        return np.array([])  # Return an empty array if the description is invalid
-
     prompt = f"ให้คำแนะนำหนังที่ตรงกับคำอธิบายต่อไปนี้: '{text}' โดยคำนึงถึงแนวหนัง เรื่องย่อ และความนิยม"
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
         outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :].squeeze(0).numpy()
 
-    # Ensure the embedding is 2D (1 sample with 768 features)
-    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0).numpy()
 
-    # Ensure it's 2D for cosine similarity
-    return embedding.reshape(1, -1)  # Reshape to ensure it's 2D
+# Genre categories
+genre_keywords = {
+    "โรแมนติก": ["รัก", "โรแมนติก", "แฟน", "ความรัก", "อกหัก", "หวาน"],
+    "สยองขวัญ": ["ผี", "สยองขวัญ", "น่ากลัว", "หลอน", "ฆาตกรรม", "วิญญาณ"],
+    "แอคชั่น": ["บู๊", "แอคชั่น", "ต่อสู้", "ยิง", "ระเบิด"],
+    "ตลก": ["ตลก", "ขำ", "ฮา", "สนุก"],
+    "ดราม่า": ["ดราม่า", "ชีวิต", "เศร้า", "น้ำตา", "ซึ้ง"],
+    "วิทยาศาสตร์": ["ไซไฟ", "วิทยาศาสตร์", "หุ่นยนต์", "อนาคต"],
+    "แฟนตาซี": ["เวทมนตร์", "แฟนตาซี", "เทพนิยาย", "อัศวิน"],
+    "อาชญากรรม": ["อาชญากรรม", "ตำรวจ", "นักสืบ", "สืบสวน"]
+}
 
+
+# Function to get recommended movies based on filters
+# @csrf_exempt
+# def recommend_movies_advanced(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#
+#             # Get filters from the request body
+#             genre = data.get('genre', "")
+#             cast = data.get('cast', "")
+#             description = data.get('description', "")
+#             start_date = data.get('start_date', "")
+#             end_date = data.get('end_date', "")
+#
+#             # Check if at least one filter is provided
+#             if not any([genre, cast, description, start_date, end_date]):
+#                 return JsonResponse({"error": "Please fill in at least one field."}, status=400)
+#
+#             # Load precomputed movie embeddings
+#             movie_embeddings = load_embeddings()
+#
+#             if movie_embeddings is None:
+#                 raise Exception("Embeddings file not found")
+#
+#             # Apply filters to the Movie model
+#             filtered_movies = Movie.objects.all()
+#
+#             # Filter by genre
+#             if genre in genre_keywords:
+#                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
+#
+#             # Filter by cast
+#             if cast:
+#                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
+#
+#             # Filter by date range
+#             if start_date and end_date:
+#                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
+#
+#             # If description is provided, compute similarity
+#             if description:
+#                 user_embedding = get_embedding(description).reshape(1, -1)
+#
+#                 # Ensure the user embedding is valid (2D)
+#                 if user_embedding.shape[1] == 0:
+#                     return JsonResponse({"error": "User embedding has zero features."}, status=400)
+#
+#                 # Prepare list of movie embeddings to compare
+#                 movie_embeddings_list = []
+#                 for movie in filtered_movies:
+#                     if movie.embedding:
+#                         movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
+#                         movie_embeddings_list.append(movie_embedding)
+#                     else:
+#                         print(f"Warning: No embedding found for movie: {movie.title_en}")  # Log missing embeddings
+#
+#                 # Ensure the movie embeddings list is not empty
+#                 if not movie_embeddings_list:
+#                     return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
+#
+#                 movie_embeddings_array = np.array(movie_embeddings_list)
+#
+#                 # Compute cosine similarity between user description and movie embeddings
+#                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
+#
+#                 # Sort movies by similarity score in descending order
+#                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
+#                 filtered_movies = [movie for movie, _ in filtered_movies]
+#
+#             # Limit results to top 20 recommended movies
+#             recommended_movies = filtered_movies[:20]
+#
+#             # Prepare the response data for the recommended movies
+#             response_data = [
+#                 {
+#                     'id': movie.id,
+#                     'title_en': movie.title_en,
+#                     'title_th': movie.title_th,
+#                     'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
+#                     'poster_path': movie.poster_path,
+#                 }
+#                 for movie in recommended_movies
+#             ]
+#
+#             return JsonResponse({
+#                 "success": True,
+#                 "recommended_movies": response_data
+#             })
+#
+#         except Exception as e:
+#             print(f"Error: {str(e)}")
+#             return JsonResponse({"error": str(e)}, status=500)
+#
+#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
 
 @csrf_exempt
 def recommend_movies_advanced(request):
@@ -595,9 +702,7 @@ def recommend_movies_advanced(request):
             start_date = data.get('start_date', "")
             end_date = data.get('end_date', "")
 
-            # Check if at least one filter is provided
-            if not any([genre, cast, description, start_date, end_date]):
-                return JsonResponse({"error": "Please fill in at least one field."}, status=400)
+            print(f"Applied Filters: Genre: {genre}, Cast: {cast}, Description: {description}, Date: {start_date} to {end_date}")
 
             # Load precomputed movie embeddings
             movie_embeddings = load_embeddings()
@@ -608,39 +713,45 @@ def recommend_movies_advanced(request):
             # Apply filters to the Movie model
             filtered_movies = Movie.objects.all()
 
-            if genre:
+            # Filter by genre
+            if genre in genre_keywords:
                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
-
+            # Filter by cast
             if cast:
                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
-
+            # Filter by date range
             if start_date and end_date:
                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
 
-            # If description is provided, use embeddings to find the most relevant movies
+            print(f"Filtered movies count after applying filters: {filtered_movies.count()}")
+
+            # If description is provided, compute similarity
             if description:
-                user_embedding = get_embedding_advanced(description)
+                user_embedding = get_embedding(description).reshape(1, -1)
 
-                # Check if the user_embedding is empty
-                if user_embedding.size == 0:  # If empty, return an error
-                    return JsonResponse({"error": "Description is too short or empty for embedding."}, status=400)
+                # Ensure the user embedding is valid (2D)
+                if user_embedding.shape[1] == 0:
+                    return JsonResponse({"error": "User embedding has zero features."}, status=400)
 
+                # Prepare list of movie embeddings to compare
                 movie_embeddings_list = []
-
                 for movie in filtered_movies:
                     if movie.embedding:
                         movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
                         movie_embeddings_list.append(movie_embedding)
+                    else:
+                        print(f"Warning: No embedding found for movie: {movie.title_en}")  # Log missing embeddings
 
-                # Ensure the movie embeddings are reshaped correctly
+                # Ensure the movie embeddings list is not empty
+                if not movie_embeddings_list:
+                    return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
+
                 movie_embeddings_array = np.array(movie_embeddings_list)
-
-                # Check if movie_embeddings_array is valid
-                if movie_embeddings_array.size == 0:  # Check if movie embeddings are empty
-                    return JsonResponse({"error": "No movie embeddings available."}, status=400)
 
                 # Compute cosine similarity between user description and movie embeddings
                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
+
+                print(f"Similarities: {similarities}")
 
                 # Sort movies by similarity score in descending order
                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
@@ -648,6 +759,10 @@ def recommend_movies_advanced(request):
 
             # Limit results to top 20 recommended movies
             recommended_movies = filtered_movies[:20]
+
+            if not recommended_movies:
+                print("No recommended movies found.")
+                return JsonResponse({"error": "No recommended movies found."}, status=404)
 
             # Prepare the response data for the recommended movies
             response_data = [
@@ -661,13 +776,13 @@ def recommend_movies_advanced(request):
                 for movie in recommended_movies
             ]
 
-            # Return the response as a JSON object
             return JsonResponse({
                 "success": True,
                 "recommended_movies": response_data
             })
 
         except Exception as e:
+            print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
@@ -1120,6 +1235,7 @@ def vote(request, post_id):
 
     return redirect('community_home')  # Or wherever you want to redirect
 
+
 @login_required
 def vote_poll(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -1140,7 +1256,8 @@ def vote_poll(request, post_id):
             total_votes = sum(poll.vote_counts.values())
 
             poll.vote_percentages = {
-                choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in poll.vote_counts.items()
+                choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in
+                poll.vote_counts.items()
             }
             poll.leading_choice = max(poll.vote_percentages, key=poll.vote_percentages.get)
             poll.leading_percent = poll.vote_percentages[poll.leading_choice]
