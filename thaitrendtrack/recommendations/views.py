@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
@@ -15,7 +17,7 @@ import pickle
 from deep_translator import GoogleTranslator
 
 from .forms import CustomUserCreationForm
-from .models import Community, Post, Comment, Poll, Hashtag, Movie  # Combined all model imports
+from .models import Community, Post, Comment, Poll, Hashtag, Movie, Vote  # Combined all model imports
 from django.shortcuts import render, redirect
 from .forms import ProfileUpdateForm
 from .models import UserProfile
@@ -410,31 +412,259 @@ def settings_view(request):
     return render(request, 'settings.html')
 
 
+# @csrf_exempt
+# def recommend_movies_advanced(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#
+#             # Your logic for filtering and recommending movies
+#             recommended_movies = Movie.objects.all()[:5]
+#
+#             return JsonResponse({
+#                 "success": True,
+#                 "recommended_movies": [
+#                     {
+#                         'id': movie.id,
+#                         'title_en': movie.title_en,
+#                         'title_th': movie.title_th,
+#                         'release_date': movie.release_date.strftime('%Y'),
+#                         'poster_path': movie.poster_path,
+#                     }
+#                     for movie in recommended_movies
+#                 ]
+#             })
+#
+#         except Exception as e:
+#             # Return an error if something goes wrong in the backend
+#             return JsonResponse({"error": str(e)}, status=500)
+#
+#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
+# def load_embeddings():
+#     try:
+#         # Assuming the embeddings are stored in a file called 'movie_embeddings.pkl'
+#         with open('recommendations\movie_embeddings.pkl', 'rb') as file:
+#             embeddings = pickle.load(file)
+#         return embeddings
+#     except FileNotFoundError:
+#         print("Embeddings file not found.")
+#         return None
+#     except Exception as e:
+#         print(f"Error loading embeddings: {e}")
+#         return None
+#
+#
+# @csrf_exempt
+# def recommend_movies_advanced(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#
+#             # Filter the movies based on user input
+#             genre = data.get('genre', "")
+#             cast = data.get('cast', "")
+#             description = data.get('description', "")
+#             start_date = data.get('start_date', "")
+#             end_date = data.get('end_date', "")
+#
+#             # Check if at least one filter is provided
+#             if not any([genre, cast, description, start_date, end_date]):
+#                 return JsonResponse({"error": "Please fill in at least one field."}, status=400)
+#
+#             # Predefined movie embeddings loaded previously
+#             movie_embeddings = load_embeddings()
+#
+#             if movie_embeddings is None:
+#                 raise Exception("Embeddings file not found")
+#
+#             # Apply filters
+#             filtered_movies = Movie.objects.all()
+#
+#             if genre:
+#                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
+#
+#             if cast:
+#                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
+#
+#             if start_date and end_date:
+#                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
+#
+#             # If description is provided, we use embeddings to find the most relevant movies
+#             if description:
+#                 user_embedding = get_embedding.py(description).reshape(1, -1)
+#                 movie_embeddings_list = []
+#
+#                 for movie in filtered_movies:
+#                     if movie.embedding:
+#                         movie_embedding = pickle.loads(movie.embedding)  # Assuming precomputed embeddings
+#                         movie_embeddings_list.append(movie_embedding)
+#
+#                 # Compute cosine similarity between the description and movie embeddings
+#                 movie_embeddings_array = np.array(movie_embeddings_list)
+#                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
+#
+#                 # Sort movies by similarity score
+#                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
+#                 filtered_movies = [movie for movie, _ in filtered_movies]
+#
+#             # Limit results to top 20 recommended movies
+#             recommended_movies = filtered_movies[:20]
+#
+#             # Store the recommended movies in the session
+#             request.session['recommended_movies'] = [
+#                 {
+#                     'id': movie.id,
+#                     'title_en': movie.title_en,
+#                     'title_th': movie.title_th,
+#                     'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
+#                     'poster_path': movie.poster_path,
+#                 }
+#                 for movie in recommended_movies
+#             ]
+#
+#             return JsonResponse({
+#                 "success": True,
+#                 "recommended_movies": [
+#                     {
+#                         'id': movie.id,
+#                         'title_en': movie.title_en,
+#                         'title_th': movie.title_th,
+#                         'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
+#                         'poster_path': movie.poster_path,
+#                     }
+#                     for movie in recommended_movies
+#                 ]
+#             })
+#
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
+#
+#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
+
+# Function to load precomputed movie embeddings
+def load_embeddings():
+    embedding_file = os.path.join(settings.BASE_DIR, 'movie_embeddings.pkl')
+    print(f"Loading embeddings from: {embedding_file}")  # Log the full path
+    try:
+        with open(embedding_file, "rb") as f:
+            embeddings = pickle.load(f)
+        print(f"Loaded {len(embeddings)} movie embeddings.")
+        return np.array(embeddings).reshape(len(embeddings), -1)
+    except FileNotFoundError:
+        print("❌ Error: Embeddings file not found. Please generate embeddings first.")
+        return None
+
+
+# Function to get text embeddings from description
+def get_embedding_advanced(text):
+    prompt = f"ให้คำแนะนำหนังที่ตรงกับคำอธิบายต่อไปนี้: '{text}' โดยคำนึงถึงแนวหนัง เรื่องย่อ และความนิยม"
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    # Reshape the embedding to ensure it's 2D, as required by cosine_similarity
+    return outputs.last_hidden_state[:, 0, :].squeeze(0).reshape(1, -1).numpy()  # Ensure it is 2D
+
+
 @csrf_exempt
 def recommend_movies_advanced(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
 
-            # Your logic for filtering and recommending movies
-            recommended_movies = Movie.objects.all()[:5]
+            # Get filters from the request body
+            genre = data.get('genre', "")
+            cast = data.get('cast', "")
+            description = data.get('description', "")
+            start_date = data.get('start_date', "")
+            end_date = data.get('end_date', "")
 
+            print(f"Received data: {data}")
+
+            # Check if at least one filter is provided
+            if not any([genre, cast, description, start_date, end_date]):
+                return JsonResponse({"error": "Please fill in at least one field."}, status=400)
+
+            # Load precomputed movie embeddings
+            movie_embeddings = load_embeddings()
+
+            if movie_embeddings is None:
+                raise Exception("Embeddings file not found")
+
+            # Apply filters to the Movie model
+            filtered_movies = Movie.objects.all()
+
+            if genre:
+                filtered_movies = filtered_movies.filter(genres__icontains=genre)
+                print(f"Filtered by genre: {genre}, movies found: {filtered_movies.count()}")
+
+            if cast:
+                filtered_movies = filtered_movies.filter(cast__icontains=cast)
+                print(f"Filtered by cast: {cast}, movies found: {filtered_movies.count()}")
+
+            if start_date and end_date:
+                filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
+                print(f"Filtered by date range: {start_date} to {end_date}, movies found: {filtered_movies.count()}")
+
+            # Check if any movies are left after filtering
+            if not filtered_movies:
+                print("No movies found after applying filters.")
+                return JsonResponse({"error": "No movies found after applying filters."}, status=400)
+
+            # If description is provided, use embeddings to find the most relevant movies
+            if description:
+                print(f"Generating embedding for description: {description}")
+                user_embedding = get_embedding_advanced(description)
+                print(f"User embedding shape: {user_embedding.shape}")
+
+                # Ensure the user embedding is valid (2D)
+                if user_embedding.shape[1] == 0:
+                    return JsonResponse({"error": "User embedding has zero features."}, status=400)
+
+                movie_embeddings_list = []
+                for movie in filtered_movies:
+                    # Load embedding from database
+                    if movie.embedding:
+                        movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
+                        movie_embeddings_list.append(movie_embedding)
+
+                # Ensure the movie embeddings list is not empty
+                if not movie_embeddings_list:
+                    return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
+
+                movie_embeddings_array = np.array(movie_embeddings_list)
+                print(f"Movie embeddings shape: {movie_embeddings_array.shape}")
+
+                # Compute cosine similarity between user description and movie embeddings
+                similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
+
+                # Sort movies by similarity score in descending order
+                filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
+                filtered_movies = [movie for movie, _ in filtered_movies]
+
+            # Limit results to top 20 recommended movies
+            recommended_movies = filtered_movies[:20]
+
+            # Prepare the response data for the recommended movies
+            response_data = [
+                {
+                    'id': movie.id,
+                    'title_en': movie.title_en,
+                    'title_th': movie.title_th,
+                    'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
+                    'poster_path': movie.poster_path,
+                }
+                for movie in recommended_movies
+            ]
+
+            # Return the response as a JSON object
             return JsonResponse({
                 "success": True,
-                "recommended_movies": [
-                    {
-                        'id': movie.id,
-                        'title_en': movie.title_en,
-                        'title_th': movie.title_th,
-                        'release_date': movie.release_date.strftime('%Y'),
-                        'poster_path': movie.poster_path,
-                    }
-                    for movie in recommended_movies
-                ]
+                "recommended_movies": response_data
             })
 
         except Exception as e:
-            # Return an error if something goes wrong in the backend
+            print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
@@ -449,6 +679,7 @@ def movies_advance(request):
 
     # Pass the movies to the template
     return render(request, 'movies_advance.html', {'movies': recommended_movies})
+
 
 @login_required
 def homepage(request):
@@ -561,8 +792,86 @@ def update_profile(request):
     return render(request, 'update_profile.html', {'form': form})
 
 
-
-
+# @login_required
+# def community_home(request):
+#     selected_club = request.GET.get('club')
+#     communities = Community.objects.all()
+#     posts = Post.objects.all().order_by('-created_at')
+#
+#     if selected_club:
+#         community = get_object_or_404(Community, name=selected_club)
+#         posts = Post.objects.filter(community=community).order_by('-created_at')
+#
+#     if request.method == 'POST':
+#         # Handle comment submission
+#         if 'comment' in request.POST:
+#             post_id = request.POST.get('post_id')
+#             comment_content = request.POST.get('comment')
+#             post = get_object_or_404(Post, id=post_id)
+#             Comment.objects.create(post=post, user=request.user, content=comment_content)
+#             return redirect('community_home')
+#
+#         # Handle new post creation with poll and hashtags
+#         content = request.POST.get('content')
+#         image = request.FILES.get('image')
+#         community_id = request.POST.get('community_id')
+#         community = get_object_or_404(Community, id=community_id)
+#
+#         # Handle Hashtag Creation
+#         hashtags_input = request.POST.get('hashtags')  # Get the hashtags input as a comma-separated string
+#         hashtags = [Hashtag.objects.get_or_create(name=tag.strip())[0] for tag in
+#                     hashtags_input.split(',')]  # Create or get existing hashtags
+#
+#         # Create the post
+#         new_post = Post.objects.create(
+#             community=community,
+#             user=request.user,
+#             content=content,
+#             image=image
+#         )
+#
+#         # Assign hashtags to the post
+#         new_post.hashtags.set(hashtags)
+#         new_post.save()
+#
+#         # Handle Poll Creation
+#         poll_question = request.POST.get('poll_question')
+#         poll_choices = request.POST.getlist('poll_choices')
+#         for key in request.POST:
+#             if key.startswith("poll_choice_"):
+#                 poll_choices.append(request.POST[key])
+#         if poll_question and poll_choices:
+#             poll = Poll.objects.create(
+#                 question=poll_question,
+#                 choices=poll_choices  # Store choices as a list
+#             )
+#         new_post.poll = poll
+#         new_post.save()
+#
+#         # Display poll choices and their counts
+#         for post in posts:
+#             if post.poll:
+#                 # Get the choices from the poll and count the votes for each
+#                 post.poll.vote_counts = {
+#                     choice: post.poll.votes.filter(choice=choice).count()
+#                     for choice in post.poll.choices
+#                 }
+#
+#         return redirect('community_home')
+#
+#     # Calculate vote counts for each post with polls
+#     for post in posts:
+#         if post.poll:
+#             post.poll.vote_counts = {
+#                 choice: post.poll.votes.filter(choice=choice).count()
+#                 for choice in post.poll.choices
+#             }
+#
+#     return render(request, 'communities.html', {
+#         'communities': communities,
+#         'posts': posts,
+#         'selected_club': selected_club,
+#     })
 
 @login_required
 def community_home(request):
@@ -608,25 +917,41 @@ def community_home(request):
 
         # Handle Poll Creation
         poll_question = request.POST.get('poll_question')
-        poll_choices = request.POST.getlist('poll_choices')  # Poll choices are sent as a list
-
+        poll_choices = request.POST.getlist('poll_choices')
+        for key in request.POST:
+            if key.startswith("poll_choice_"):
+                poll_choices.append(request.POST[key])
         if poll_question and poll_choices:
             poll = Poll.objects.create(
                 question=poll_question,
-                choices=poll_choices  # Storing choices as a list
+                choices=poll_choices  # Store choices as a list
             )
-            # Link the poll to the post
-            new_post.poll = poll
-            new_post.save()
+        new_post.poll = poll
+        new_post.save()
+
+        # Display poll choices and their counts
+        for post in posts:
+            if post.poll:
+                post.poll.vote_counts = {
+                    choice: post.poll.votes.filter(choice=choice).count()
+                    for choice in post.poll.choices
+                }
 
         return redirect('community_home')
+
+    # Calculate vote counts for each post with polls
+    for post in posts:
+        if post.poll:
+            post.poll.vote_counts = {
+                choice: post.poll.votes.filter(choice=choice).count()
+                for choice in post.poll.choices
+            }
 
     return render(request, 'communities.html', {
         'communities': communities,
         'posts': posts,
         'selected_club': selected_club,
     })
-
 
 
 @login_required
@@ -722,3 +1047,63 @@ def delete_post(request, post_id):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
+def vote(request, poll_id):
+    poll = get_object_or_404(Poll, id=poll_id)  # หา Poll ตาม id
+
+    if request.method == "POST":
+        choice = request.POST.get('choice')  # รับข้อมูลตัวเลือกที่ผู้ใช้เลือก
+
+        if choice:
+            # สร้างการโหวตใหม่
+            Vote.objects.create(
+                user=request.user,  # ผู้ใช้ที่ทำการโหวต
+                poll=poll,  # Poll ที่ทำการโหวต
+                choice=choice  # ตัวเลือกที่เลือก
+            )
+
+            # ส่งผู้ใช้กลับไปยังหน้าโพสต์หรือที่อื่นๆ
+            return redirect('poll_results', poll_id=poll.id)
+    else:
+        # ถ้าไม่ได้ใช้ POST ให้แสดงผลลัพธ์
+        return render(request, 'vote.html', {'poll': poll})
+
+
+def poll_results(request, poll_id):
+    poll = get_object_or_404(Poll, id=poll_id)
+    votes = Vote.objects.filter(poll=poll)
+
+    # สรุปผลการโหวต
+    results = {choice: votes.filter(choice=choice).count() for choice in poll.get_choices}
+
+    return render(request, 'poll_results.html', {'poll': poll, 'results': results})
+
+
+# @csrf_exempt
+# def vote(request, post_id):
+#     post = get_object_or_404(Post, id=post_id)  # Retrieve the post based on the post_id
+#     if request.method == 'POST':
+#         poll_choice = request.POST.get('poll_choice')  # Get the poll choice from the form
+#         if poll_choice:
+#             # Save the vote in the database
+#             Vote.objects.create(post=post, user=request.user, choice=poll_choice)
+#             return redirect('community_home')  # Redirect after voting
+#     return redirect('community_home')  # Redirect if method is not POST or no choice is selected
+
+@csrf_exempt
+def vote(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    poll_choice = request.POST.get('poll_choice')  # Ensure you have the poll choice from the form
+
+    if poll_choice is None:
+        print("Poll choice was not passed correctly")
+        return redirect('community_home')  # Handle this case more gracefully, maybe with an error message
+
+    # Create a vote for the poll choice
+    vote = Vote.objects.create(
+        post=post,
+        user=request.user,
+        choice=poll_choice
+    )
+
+    return redirect('community_home')  # Or wherever you want to redirect

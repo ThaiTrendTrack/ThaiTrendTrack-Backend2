@@ -36,5 +36,10 @@ urlpatterns = [
     path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
     path('recommend_advanced/', views.recommend_movies_advanced, name='recommend_advanced'),
     path('movies_advance/', views.movies_advance, name='movies_advance'),
-
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('poll/<int:post_id>/vote/', views.vote, name='vote'),
+    path('poll/<int:poll_id>/vote/', views.vote, name='vote'),
+    path('poll/<int:poll_id>/results/', views.poll_results, name='poll_results'),
+    path('community/', views.community_home, name='community_home'),
+    path('poll/<int:post_id>/vote/', views.vote, name='vote'),
        ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

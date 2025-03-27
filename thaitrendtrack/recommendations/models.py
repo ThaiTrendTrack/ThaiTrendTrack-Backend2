@@ -1,3 +1,6 @@
+import datetime
+import json
+
 from django.contrib.auth.models import User
 from django.db import models
 import torch
@@ -55,6 +58,10 @@ class Movie(models.Model):
     runtime = models.CharField(max_length=50, blank=True, null=True)
     embedding = models.BinaryField(blank=True, null=True)  # ✅ เก็บ embedding ในแบบ pickle
 
+    def get_genres(self):
+        # Convert the stored JSON string back to a list if needed
+        return json.loads(self.genres) if self.genres else []
+
     def save(self, *args, **kwargs):
         """สร้าง embeddings โดยใช้ overview เป็นหลัก"""
         if not self.embedding:
@@ -99,7 +106,7 @@ class Hashtag(models.Model):
 class Poll(models.Model):
     question = models.CharField(max_length=255)
     choices = models.JSONField()  # To store choices in a JSON format
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.question
@@ -114,7 +121,7 @@ class Post(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='post_images/', null=True, blank=True)
     hashtags = models.ManyToManyField(Hashtag, related_name='posts', blank=True)
-    poll = models.OneToOneField(Poll, on_delete=models.CASCADE, null=True, blank=True)  # Link to Poll
+    poll = models.OneToOneField(Poll, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Add created_at field
     likes = models.ManyToManyField(User, related_name="liked_posts", blank=True)  # New field for likes
 
@@ -123,12 +130,12 @@ class Post(models.Model):
 
 
 class Vote(models.Model):
+    poll = models.ForeignKey(Poll, related_name="votes", on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
-    choice = models.CharField(max_length=100)
+    choice = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"Vote for {self.poll} by {self.user}"
+        return f"Vote by {self.user.username} for {self.choice}"
 
 
 class Comment(models.Model):

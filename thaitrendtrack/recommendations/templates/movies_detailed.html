@@ -673,7 +673,7 @@
                       <p class="sub-name black-text">{{ movie.title_th }}</p>
                        <div class="info-container">
                            <p id="movieDetails" class="description black-text">
-                            {{ movie.release_date|date:"Y" }} | {{ movie.genres }} | {{ movie.runtime }}
+                            {{ movie.release_date|date:"Y" }} | {{ movie.genres|join:", " }} | {{ movie.runtime }}
                             </p>
                            <div class="tag-cloud-block">
                             <span class="tag">

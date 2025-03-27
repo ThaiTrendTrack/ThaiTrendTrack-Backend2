@@ -345,7 +345,7 @@
     <nav>
       <div class="left-nav flex-center">
         <div class="logo">
-          <img src="/static/logo/TTT-logo1.png" alt="logo">
+            <img src="{'http://127.0.0.1:8000/static/logo/TTT-logo3.png'}" alt="logo">
         </div>
         <div class="menu">
           <ul>
@@ -384,7 +384,7 @@
 
 
       <div class="nav-icons">
-          <a href="{% url 'home' %}">
+          <a href="/community/">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/>
               </svg>
@@ -418,7 +418,8 @@
 <!--          <h3 class="name">NichaParich02</h3>-->
 
           <a href="/settings/">
-	        <img src="/static/icons/user.png" alt="Profile Photo" class="account">
+	        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar">
+
           </a>
 <!--          <a href="{% url '//' %}">-->
 <!--	        <img src="../static/icons/NichaParich.png" alt="Profile Photo" class="profile-photo">-->

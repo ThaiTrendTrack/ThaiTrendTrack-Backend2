@@ -181,20 +181,30 @@
 
            <section class="movies-content">
 <!--        <h2 class="section-title">Movies</h2>-->
-        <div class="movies-container">
-            {% for movie in movies %}
-                <div class="movie-card">
-                    <div class="movie-image">
-                        <img src="{{ movie.poster_path }}" alt="{{ movie.title_en }} Poster">
-                    </div>
+            <div class="movies-container">
+        {% for movie in movies %}
+        <div class="movie-card">
+            <div class="movie-image">
+                <img src="{{ movie.poster_path }}" alt="{{ movie.title_en }} Poster">
+            </div>
+
+            {% if movie.id %}
+                <a href="{% url 'movie_detail' movie.id %}">
                     <p class="movie-title">{{ movie.title_en }}</p>
-                    <p class="movie-subtitle">{{ movie.title_th }}</p>
-                    <p class="movie-year">{{ movie.release_date|date:"Y" }}</p>
-                </div>
-            {% empty %}
-                <p>No movies available.</p>
-            {% endfor %}
+                </a>
+            {% endif %}
+
+            <!-- Always show subtitle and year -->
+            <p class="movie-subtitle">{{ movie.title_th }}</p>
+            <p class="movie-year">Release Year: {{ movie.release_date|date:"Y" }}</p>
+
         </div>
+    {% empty %}
+        <p>No movies available.</p>
+    {% endfor %}
+</div>
+
+
         </section>
 
         <section class="series-content">
@@ -357,8 +367,6 @@
 
     </div>
 
-
-    <script src="{% static 'img-slider.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Load the external navbar
@@ -443,6 +451,55 @@ function submitAdvancedSearch() {
     .catch(error => console.error('Error:', error));
 }
 </script>
+<script src="img-slider.js" defer></script>
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("✅ img-slider.js loaded!");  // Check if script runs
+
+            let currentIndex = 0;
+            const items = document.querySelectorAll(".img-slider .list .item");
+            const totalItems = items.length;
+            const slider = document.querySelector(".img-slider .list");
+            const dots = document.querySelectorAll(".dots li");
+            const nextButton = document.getElementById("next");
+            const prevButton = document.getElementById("prev");
+
+            if (!slider || items.length === 0) {
+                console.error("❌ Slider not found or no items!");
+                return;
+            }
+
+            function updateSlider(index) {
+                slider.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach(dot => dot.classList.remove("active"));
+                dots[index].classList.add("active");
+            }
+
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateSlider(currentIndex);
+            }
+
+            function prevSlide() {
+                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+                updateSlider(currentIndex);
+            }
+
+            nextButton?.addEventListener("click", nextSlide);
+            prevButton?.addEventListener("click", prevSlide);
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener("click", () => {
+                    currentIndex = index;
+                    updateSlider(currentIndex);
+                });
+            });
+
+            setInterval(nextSlide, 5000);
+        });
+
+
+    </script>
 
 </body>
 </html>
