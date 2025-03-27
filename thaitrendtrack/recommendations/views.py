@@ -922,7 +922,8 @@ def community_home(request):
 
         # Handle Poll Creation
         poll_question = request.POST.get('poll_question')
-        poll_choices = request.POST.getlist('poll_choices')
+        poll_choices_raw = request.POST.get('poll_choices')  # รับค่าเป็นสตริง
+        poll_choices = [choice.strip() for choice in poll_choices_raw.split(',') if choice.strip()]
         for key in request.POST:
             if key.startswith("poll_choice_"):
                 poll_choices.append(request.POST[key])

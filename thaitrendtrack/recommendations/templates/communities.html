@@ -897,12 +897,12 @@
                             <input type="text" name="poll_question" placeholder="Let's add the question!" class="text-field">
                         </div>
 
-                        <!-- Poll Choices -->
-                        <div class="form-line">
-                            <i class="fas fa-chart-bar icon-left"></i>
-                            <label class="field-label">Poll Choices</label>
-                            <input type="text" name="poll_choices" placeholder="eg. Movie1, Movie2 (comma-separated)" class="text-field">
-                        </div>
+                            <!-- Poll Choices -->
+                            <div class="form-line">
+                                <i class="fas fa-chart-bar icon-left"></i>
+                                <label class="field-label">Poll Choices</label>
+                                <input type="text" name="poll_choices" placeholder="eg. Movie1, Movie2 (comma-separated)" class="text-field">
+                            </div>
 
                         <!-- Submit Button -->
                         <div class="submit-container">
@@ -972,7 +972,7 @@
                   </li>
                 {% endfor %}
               </ul>
-              <button type="submit" style="margin-top: 10px; padding: 6px 14px; border: none; border-radius: 5px; background-color: #DC0856; color: white;">Vote</button>
+              <button type="submit" style="margin-top: 10px; padding: 6px 35px; border: none; border-radius: 10px; background-color: #DC0856; color: white; align-items: center;">Vote</button>
             </form>
 
             {% if post.poll.leading_choice %}
