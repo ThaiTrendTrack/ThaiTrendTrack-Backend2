@@ -192,12 +192,28 @@
 
     /* User Avatar */
     .user-avatar {
+        width: 44px;
+        height: 46px;
+        border-radius: 50%;
+        margin-left: 5px;
+        margin-top: -40px;
+    }
+
+    .user-avatar-1 {
         width: 42px;
         height: 44px;
         border-radius: 50%;
         margin-left: 5px;
-        margin-top: 10px;
-}
+        margin-top: 5px;
+    }
+
+    .user-avatar-2 {
+        width: 42px;
+        height: 44px;
+        border-radius: 50%;
+        margin-left: 5px;
+        margin-top: 3px;
+    }
 
     /* Post Input */
     .post-input {
@@ -428,17 +444,21 @@
     }
 
     .post-btn-stacked {
-        background-color: #DC0856;
-        color: white;
-        border: none;
-        padding: 10px 25px;
-        font-size: 18px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 8%;
-        text-align: center;
-    }
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #DC0856;
+          color: white;
+          border: none;
+          padding: 10px 25px;
+          font-size: 18px;
+          border-radius: 12px;
+          cursor: pointer;
+          font-weight: bold;
+          text-align: center;
+          width: 8%;
+        }
+
 
     .post-btn-stacked:hover {
         background-color: #b8044c;
@@ -502,9 +522,8 @@
 
 
         .overview {
-            /*margin: 10px 0;*/
-            margin-top: -20px;
-            font-size: 16px;
+            margin-top: -15px;
+            font-size: 18px;
         }
 
 
@@ -529,8 +548,8 @@
        }
 
        .fav svg {
-            width: 32px;
-            height: 32px;
+            width: 35px;
+            height: 35px;
             fill: #B3B3B3;
             transition: fill 0.2s ease;
        }
@@ -563,9 +582,9 @@
 
        .custom-line {
             width: 100%;
-            height: 2px;
+            height: 10px;
             background-color: gray;
-            margin-top: 25px;
+            margin-top: 15px;
             margin-bottom: 15px;
        }
 
@@ -637,7 +656,7 @@
 
        form input[type=text]{
             height: 10px;
-            width: 185%;
+            width: 82%;
             border-radius: 40px;
             justify-content: right;
             align-items: center;
@@ -648,10 +667,18 @@
             font-size: 18px;
         }
 
+
+       .movie-img {
+           width: 300px;
+           height: auto;
+           object-fit: cover;
+           border-radius: 7px;
+       }
+
        .comment-submit {
             position: relative;
             top: -40px;
-            left: 485px;
+            left: 245px;
             background-color: transparent;
             width: 40px;
             height: 40px;
@@ -741,7 +768,8 @@
             word-wrap: break-word;
             word-break: break-word;
             margin-top: 13px ;
-            margin-left: 10px;
+            margin-left: 2px;
+            font-weight: normal;
            {#text-align: left;#}
        }
 
@@ -758,7 +786,7 @@
         }
 
         .hashtags {
-            line-height: 1.5; /* เลื่อนขึ้นจากบรรทัดปกติ */
+            line-height: 1.5;
             margin-right: 10px;
         }
 
@@ -787,11 +815,6 @@
             opacity: 1;             /* fully visible */
             font-weight: 400;       /* lighter text */
         }
-
-
-
-
-
 </style>
 <body>
 
@@ -887,128 +910,206 @@
                     </form>
                 </div>
 
-
-            <!-- ✅ Post Display Section -->
+                <!-- ✅ Post Display Section -->
                 {% for post in posts %}
-                    <div class="post-item" id="post-{{ post.id }}">
-                        <span class="club-group" style="font-size: 16px">
-                            <i class="fas fa-users" style="color:#DC0856;"></i>
-                            {{ post.community.name }}
-                        </span>
-                        <br>
-                <div class="post-header">
-                    {% if user.userprofile.profile_picture %}
-                        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar">
-                    {% else %}
-                        <img src="{% static 'icons/user.png' %}" alt="Default User" class="user-avatar">
-                    {% endif %}
-                    <span>{{ post.user.username }}</span>
-                    <span class="post-meta">• {{ post.created_at|date:"h:i A • M d, Y" }}</span>
-                </div>
-
-                <section class="movie white-text">
-                    <div class="movie-img">
-                        {% if post.image %}
-                            <img src="{{ post.image.url }}" alt="Post Image">
-                        {% else %}
-                        <img src="{% static '/posters/poster_d1.jpg' %}" alt="Default User" class="user-avatar">
-                        {% endif %}
+                  <div class="post-item" id="post-{{ post.id }}">
+                    <!-- Top Bar: Club Group (left) & Delete Icon (right) -->
+                    <div class="post-top-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="club-group" style="font-size: 16px;">
+                        <i class="fas fa-users" style="color:#DC0856;"></i> {{ post.community.name }}
+                      </span>
+                      {% if post.user == request.user %}
+                        <button onclick="deletePost({{ post.id }})" class="delete-post-btn" style="background: none; border: none; cursor: pointer;">
+                          <i class="fas fa-trash" style="color:#DC0856; font-size: 20px;"></i>
+                        </button>
+                      {% endif %}
                     </div>
-                    <div class="post-content">
-                        <div class="detail flex">
-                            <p class="overview black-text" id="postOverview">{{ post.content }}</p>
 
-                            <!-- Poll Section -->
-                            <!-- Display Poll -->
-                            {% if post.poll %}
-                                <div class="poll-section">
-                                    <h4 class="black-text">{{ post.poll.question }}</h4>
-                                    <ul class="black-text">
-                                        {% for choice in post.poll.choices %}
-                                            <li>{{ choice }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            {% endif %}
+                    <!-- Header: User Avatar, Username, Datetime -->
+                    <div class="post-header" style="margin-top: 5px;">
+                      {% if user.userprofile.profile_picture %}
+                        <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar-1">
+                      {% else %}
+                        <img src="{% static 'icons/user.png' %}" alt="Default User" class="user-avatar-1">
+                      {% endif %}
+                      <span>{{ post.user.username }}</span>
+                      <span class="post-meta">• {{ post.created_at|date:"h:i A • M d, Y" }}</span>
+                    </div>
+
+                    <!-- Main Content Area: Two-column layout -->
+                    <section class="post-main-content" style="display: flex; gap: 15px; margin-top: 15px;">
+                      <!-- Left Column: Post Image -->
+                      <div class="movie-img">
+                        {% if post.image %}
+                          <img src="{{ post.image.url }}" alt="Post Image">
+                        {% else %}
+                          <img src="{% static '/posters/poster_d1.jpg' %}" alt="Default User" class="movie-img">
+                        {% endif %}
+                      </div>
+
+                      <!-- Right Column: Post Details -->
+                      <div class="post-content" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- 1. Text Post -->
+                        <p class="overview black-text" id="postOverview">{{ post.content }}</p>
+
+                        <!-- 2 & 3. Poll Section (Question and Choices with vote results if available) -->
+                        {% if post.poll %}
+                          <div class="poll-section black-text" style="background: #f9f9f9; padding: 10px; border-radius: 8px; height: 100% ; width: auto">
+                            <h4 style="margin-top: 0.5px"> [POLL] {{ post.poll.question }}</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                              {% for choice in post.poll.choices %}
+                                <li>
+                                  {{ choice }}
+{#                                   Optionally: add vote percentage here#}
+                                </li>
+                              {% endfor %}
+                            </ul>
+                          </div>
+                        {% endif %}
+
+{#                      {% if post.poll %}#}
+{#                      <div class="poll-section black-text" style="background: #f9f9f9; padding: 10px; border-radius: 8px; width: auto;">#}
+{#                        <h4 style="margin-top: 0.5px;">[POLL] {{ post.poll.question }}</h4>#}
+{#                        <!-- Voting Form -->#}
+{#                        <form method="POST" action="{% url 'vote_poll' post.poll.id %}">#}
+{#                          {% csrf_token %}#}
+{#                          <ul style="list-style: none; padding: 0; margin: 0;">#}
+{#                            {% for choice in post.poll.choices %}#}
+{#                              <li style="margin: 8px 0;">#}
+{#                                <label style="cursor: pointer; font-size: 16px;">#}
+{#                                  <input type="radio" name="poll_choice" value="{{ forloop.counter0 }}" style="margin-right: 8px;" />#}
+{#                                  {{ choice }}#}
+                                  {# Optionally, you can display a vote percentage next to each choice if available #}
+{#                                </label>#}
+{#                              </li>#}
+{#                            {% endfor %}#}
+{#                          </ul>#}
+{#                          <button type="submit" style="margin-top: 10px; padding: 6px 14px; border: none; border-radius: 5px; background-color: #DC0856; color: white; cursor: pointer; font-size: 16px;">#}
+{#                            Vote#}
+{#                          </button>#}
+{#                        </form>#}
+{#                        <!-- Display the leading choice if available -->#}
+{#                        {% if post.poll.leading_choice %}#}
+{#                          <div style="margin-top: 12px; font-size: 16px;">#}
+{#                            <strong>Leading Choice:</strong> {{ post.poll.leading_choice }} ({{ post.poll.leading_percent }}%)#}
+{#                          </div>#}
+{#                        {% endif %}#}
+{#                      </div>#}
+{#                    {% endif %}#}
+
+
+                        <!-- 4. Hashtags -->
                         <div class="hashtags">
-                                {% for hashtag in post.hashtags.all %}
-                                    {% if hashtag.name %}
-                                        <a href="{% url 'hashtag_posts' hashtag_name=hashtag.name %}" class="hashtag">#{{ hashtag.name }}</a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
+                          {% for hashtag in post.hashtags.all %}
+                            {% if hashtag.name %}
+                              <a href="{% url 'hashtag_posts' hashtag_name=hashtag.name %}" class="hashtag" style="font-size:16px">#{{ hashtag.name }}</a>
+                            {% endif %}
+                          {% endfor %}
+                        </div>
+
+                        <!-- 5. Horizontal Divider -->
                         <div class="custom-line"></div>
 
-                            <!-- Like Section -->
-                            <div class="like-section">
-                                <h3 class="black-text" id="like-count-{{ post.id }}">{{ post.likes.count }}
-                                <button class="fav" id="like-button-{{ post.id }}" onclick="likePost({{ post.id }})">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
-                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                    </svg>
-                                </button></h3>
+                        <!-- 6. Stats Row -->
+                        <div class="post-stats" style="display: flex; align-items: center; gap: 15px;">
+                          <div class="stats-like" style="display: flex; align-items: center; gap: 10px;">
+                            <button class="fav" id="like-button-{{ post.id }}" onclick="likePost({{ post.id }})" style="background: none; border: none; cursor: pointer;">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24" height="24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                              </svg>
+                            </button>
+                              <span id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 20px;">
+                              <!-- Comments -->
+                              <div class="stats-comment"
+                                   style="display: flex; align-items: center; gap: 8px; margin-left: 15px;">
+                                <i class="fas fa-comment" style="color: #DC0856; font-size: 32px;"></i>
+                                <span>{{ post.comments.count }}</span>
+                              </div>
+
+                              <!-- Engagement -->
+                              <div class="stats-engagement"
+                                   style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
+                                <i class="fas fa-chart-bar" style="color: #DC0856; font-size: 32px;"></i>
+                                <span>0</span>
+                              </div>
                             </div>
-
-                            <!-- Comment Section -->
-                            <div class="comment-section">
-                                <div class="comment-form">
-                                    {% if user.userprofile.profile_picture %}
-                                    <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar" style="width: 35px ; height:35px ; margin-top: -0.15px" >
-                                {% else %}
-                                    <img src="{% static 'icons/user.png' %}" alt="Default User" class="user-avatar" style="width: 35px ; height:35px ; margin-top: -0.15px">
-                                {% endif %}
-
-                                    <form method="POST" class="flex align-items-center" id="commentForm">
-                                        {% csrf_token %}
-                                        <input type="text" name="comment" placeholder="Add a comment..." class="comment-input" required style="margin-left: 20px">
-                                        <input type="hidden" name="post_id" value="{{ post.id }}">
-                                        <button type="submit" class="comment-submit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
-                                                <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <!-- Display Comments -->
-                                <div class="comment-box">
-                                    {% for comment in post.comments.all %}
-                                        <div class="comment" id="comment-{{ comment.id }}">
-                                            {% if user.userprofile.profile_picture %}
-                                                <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar" style="width: 35px ; height:35px">
-                                            {% else %}
-                                                <img src="{% static 'icons/user.png' %}" alt="Default User" class="user-avatar" style="width: 35px ; height:35px">
-                                            {% endif %}
-                                            <div class="comment-text black-text">
-                                                <div class="comment-detail flex">
-                                                    <p class="username-text">{{ comment.user.username }}</p>
-                                                    <div class="comment-body">{{ comment.content }}</div>
-                                                    <p class="datetime-text">{{ comment.created_at|date:"h:i A · M d, Y" }}</p>
-                                                </div>
-{#                                                <div class="comment-body">{{ comment.content }}</div>#}
-
-                                                <!-- Delete Comment Button -->
-                                                {% if comment.user == request.user %}
-                                                    <button onclick="deleteComment({{ comment.id }})" class="delete-comment-btn">
-                                                        Delete Comment
-                                                    </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <!-- Delete Post Button -->
-                            {% if post.user == request.user %}
-                                <button onclick="deletePost({{ post.id }})" class="delete-post-btn">
-                                    Delete Post
-                                </button>
-                            {% endif %}
                         </div>
-                    </div>
-                </section>
-            </div>
+
+                        <!-- 7. Add Comment Form -->
+                        <div class="comment-section" style="margin-top: 15px;">
+                          <div class="comment-form" style="display: flex; align-items: center;">
+                            {% if user.userprofile.profile_picture %}
+                              <img src="{{ user.userprofile.profile_picture.url }}" alt="User" class="user-avatar" style="width:35px; height:35px;">
+                            {% else %}
+                              <img src="{% static 'icons/user.png' %}" alt="Default User" class="user-avatar" style="width:35px; height:35px;">
+                            {% endif %}
+                            <form method="POST" class="flex align-items-center" id="commentForm" style="display: flex; align-items: center; width: 100%;">
+                              {% csrf_token %}
+                              <input type="text" name="comment" placeholder="Add a comment..." class="comment-input" required style="margin-left:-28px;">
+                              <input type="hidden" name="post_id" value="{{ post.id }}">
+                              <button type="submit" class="comment-submit" style="background: none; border: none; cursor: pointer;">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+                                  <path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"></path>
+                                </svg>
+                              </button>
+                            </form>
+                          </div>
+
+                        <!-- Comments Container -->
+                        <div class="comment-box">
+                          {% for comment in post.comments.all %}
+                            <div class="comment" id="comment-{{ comment.id }}" style="display: flex; margin-bottom: 15px;">
+
+                              <!-- Left side: Avatar -->
+                              {% if comment.user.userprofile.profile_picture %}
+                                <img src="{{ comment.user.userprofile.profile_picture.url }}"
+                                     alt="User"
+                                     class="user-avatar-2"
+                                     style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;" />
+                              {% else %}
+                                <img src="{% static 'icons/user.png' %}"
+                                     alt="Default User"
+                                     class="user-avatar-2"
+                                     style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;" />
+                              {% endif %}
+
+                              <!-- Right side: Username + Date + Comment + Delete -->
+                              <div class="comment-right" style="display: flex; flex-direction: column; margin-left: 10px; width: 100%;">
+
+                                <!-- Username + Date on same line -->
+                                <div class="comment-header" style="display: flex; align-items: center; gap: 8px;">
+                                  <span class="username-text" style="font-weight: bold; font-size: 14px;">
+                                    {{ comment.user.username }}
+                                  </span>
+                                  <span class="comment-meta" style="font-size: 13px; color: #666;">
+                                    • {{ comment.created_at|date:"h:i A · M d, Y" }}
+                                  </span>
+                                </div>
+
+                                <!-- The actual comment text below the header -->
+                                <div class="comment-body" style="margin-top: 4px; font-size: 14px; color: #333;">
+                                  {{ comment.content }}
+                                </div>
+                              </div>
+
+                              <!-- Delete button (only if it's the current user's comment) -->
+                              {% if comment.user == request.user %}
+                                <button onclick="deleteComment({{ comment.id }})"
+                                        class="delete-comment-btn"
+                                        style="background: none; border: none; cursor: pointer; margin-left: auto; padding: 0 5px;">
+                                  <i class="fas fa-trash" style="color: #DC0856; font-size: 18px;"></i>
+                                </button>
+                              {% endif %}
+
+                            </div>
+                          {% endfor %}
+                        </div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
         {% endfor %}
 </div>
 </body>
@@ -1217,6 +1318,5 @@ function deletePost(postId) {
             console.error('Error:', error);
             alert('Something went wrong.');
         });
-    }
-
+    }}
 </script>
