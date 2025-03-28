@@ -24,7 +24,6 @@ urlpatterns = [
     path('settings/', views.settings_view, name='settings'),
     path("edit_preferences/", save_preferences, name="save_preferences"),
     path('update-profile/', update_profile, name='update_profile'),
-    path('recommend_advanced/', views.recommend_movies_advanced, name='recommend_advanced'),
     path('community/', views.community_home, name='community_home'),
     path('community/<int:community_id>/post/', views.create_post, name='create_post'),
     path('community/<int:community_id>/create/', views.create_post, name='create_post'),

@@ -152,6 +152,26 @@ def definition_movies(request):
     return render(request, "definition_movies.html", {"movies": recommended_movies[:5], "search_query": query_text})
 
 
+def movies_by_category(request, category):
+    # Convert English category to Thai
+    category_thai = GENRE_MAPPING.get(category, category)  # Default to input if not found
+    print(f"🔍 Searching for movies in category: {category} ({category_thai})")  # Debugging
+
+    # Check if genres are stored as JSON or strings
+    try:
+        movies = [movie for movie in Movie.objects.all() if category_thai in json.loads(movie.genres)]
+    except TypeError:  # If genres are already lists
+        movies = [movie for movie in Movie.objects.all() if category_thai in movie.genres]
+
+    print(f"✅ Found {len(movies)} movies in category: {category} ({category_thai})")  # Debugging
+
+    context = {
+        "category": category,
+        "movies": movies,
+    }
+    return render(request, "movies_category.html", context)
+
+
 def login_view(request):
     return render(request, 'login.html')
 
@@ -402,158 +422,9 @@ def recommend_movies(request):
         return render(request, "recommend.html", {"movies": recommended_movies})  # Use recommend.html
 
 
-def movies_by_category(request, category):
-    # Convert English category to Thai
-    category_thai = GENRE_MAPPING.get(category, category)  # Default to input if not found
-    print(f"🔍 Searching for movies in category: {category} ({category_thai})")  # Debugging
-
-    # Check if genres are stored as JSON or strings
-    try:
-        movies = [movie for movie in Movie.objects.all() if category_thai in json.loads(movie.genres)]
-    except TypeError:  # If genres are already lists
-        movies = [movie for movie in Movie.objects.all() if category_thai in movie.genres]
-
-    print(f"✅ Found {len(movies)} movies in category: {category} ({category_thai})")  # Debugging
-
-    context = {
-        "category": category,
-        "movies": movies,
-    }
-    return render(request, "movies_category.html", context)
-
-
 def settings_view(request):
     return render(request, 'settings.html')
 
-
-# @csrf_exempt
-# def recommend_movies_advanced(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#
-#             # Your logic for filtering and recommending movies
-#             recommended_movies = Movie.objects.all()[:5]
-#
-#             return JsonResponse({
-#                 "success": True,
-#                 "recommended_movies": [
-#                     {
-#                         'id': movie.id,
-#                         'title_en': movie.title_en,
-#                         'title_th': movie.title_th,
-#                         'release_date': movie.release_date.strftime('%Y'),
-#                         'poster_path': movie.poster_path,
-#                     }
-#                     for movie in recommended_movies
-#                 ]
-#             })
-#
-#         except Exception as e:
-#             # Return an error if something goes wrong in the backend
-#             return JsonResponse({"error": str(e)}, status=500)
-#
-#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
-# def load_embeddings():
-#     try:
-#         # Assuming the embeddings are stored in a file called 'movie_embeddings.pkl'
-#         with open('recommendations\movie_embeddings.pkl', 'rb') as file:
-#             embeddings = pickle.load(file)
-#         return embeddings
-#     except FileNotFoundError:
-#         print("Embeddings file not found.")
-#         return None
-#     except Exception as e:
-#         print(f"Error loading embeddings: {e}")
-#         return None
-#
-#
-# @csrf_exempt
-# def recommend_movies_advanced(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#
-#             # Filter the movies based on user input
-#             genre = data.get('genre', "")
-#             cast = data.get('cast', "")
-#             description = data.get('description', "")
-#             start_date = data.get('start_date', "")
-#             end_date = data.get('end_date', "")
-#
-#             # Check if at least one filter is provided
-#             if not any([genre, cast, description, start_date, end_date]):
-#                 return JsonResponse({"error": "Please fill in at least one field."}, status=400)
-#
-#             # Predefined movie embeddings loaded previously
-#             movie_embeddings = load_embeddings()
-#
-#             if movie_embeddings is None:
-#                 raise Exception("Embeddings file not found")
-#
-#             # Apply filters
-#             filtered_movies = Movie.objects.all()
-#
-#             if genre:
-#                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
-#
-#             if cast:
-#                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
-#
-#             if start_date and end_date:
-#                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
-#
-#             # If description is provided, we use embeddings to find the most relevant movies
-#             if description:
-#                 user_embedding = get_embedding.py(description).reshape(1, -1)
-#                 movie_embeddings_list = []
-#
-#                 for movie in filtered_movies:
-#                     if movie.embedding:
-#                         movie_embedding = pickle.loads(movie.embedding)  # Assuming precomputed embeddings
-#                         movie_embeddings_list.append(movie_embedding)
-#
-#                 # Compute cosine similarity between the description and movie embeddings
-#                 movie_embeddings_array = np.array(movie_embeddings_list)
-#                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
-#
-#                 # Sort movies by similarity score
-#                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
-#                 filtered_movies = [movie for movie, _ in filtered_movies]
-#
-#             # Limit results to top 20 recommended movies
-#             recommended_movies = filtered_movies[:20]
-#
-#             # Store the recommended movies in the session
-#             request.session['recommended_movies'] = [
-#                 {
-#                     'id': movie.id,
-#                     'title_en': movie.title_en,
-#                     'title_th': movie.title_th,
-#                     'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
-#                     'poster_path': movie.poster_path,
-#                 }
-#                 for movie in recommended_movies
-#             ]
-#
-#             return JsonResponse({
-#                 "success": True,
-#                 "recommended_movies": [
-#                     {
-#                         'id': movie.id,
-#                         'title_en': movie.title_en,
-#                         'title_th': movie.title_th,
-#                         'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
-#                         'poster_path': movie.poster_path,
-#                     }
-#                     for movie in recommended_movies
-#                 ]
-#             })
-#
-#         except Exception as e:
-#             return JsonResponse({"error": str(e)}, status=500)
-#
-#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
 
 # Load pre-trained tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
@@ -595,100 +466,6 @@ genre_keywords = {
 
 
 # Function to get recommended movies based on filters
-# @csrf_exempt
-# def recommend_movies_advanced(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#
-#             # Get filters from the request body
-#             genre = data.get('genre', "")
-#             cast = data.get('cast', "")
-#             description = data.get('description', "")
-#             start_date = data.get('start_date', "")
-#             end_date = data.get('end_date', "")
-#
-#             # Check if at least one filter is provided
-#             if not any([genre, cast, description, start_date, end_date]):
-#                 return JsonResponse({"error": "Please fill in at least one field."}, status=400)
-#
-#             # Load precomputed movie embeddings
-#             movie_embeddings = load_embeddings()
-#
-#             if movie_embeddings is None:
-#                 raise Exception("Embeddings file not found")
-#
-#             # Apply filters to the Movie model
-#             filtered_movies = Movie.objects.all()
-#
-#             # Filter by genre
-#             if genre in genre_keywords:
-#                 filtered_movies = filtered_movies.filter(genres__icontains=genre)
-#
-#             # Filter by cast
-#             if cast:
-#                 filtered_movies = filtered_movies.filter(cast__icontains=cast)
-#
-#             # Filter by date range
-#             if start_date and end_date:
-#                 filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
-#
-#             # If description is provided, compute similarity
-#             if description:
-#                 user_embedding = get_embedding(description).reshape(1, -1)
-#
-#                 # Ensure the user embedding is valid (2D)
-#                 if user_embedding.shape[1] == 0:
-#                     return JsonResponse({"error": "User embedding has zero features."}, status=400)
-#
-#                 # Prepare list of movie embeddings to compare
-#                 movie_embeddings_list = []
-#                 for movie in filtered_movies:
-#                     if movie.embedding:
-#                         movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
-#                         movie_embeddings_list.append(movie_embedding)
-#                     else:
-#                         print(f"Warning: No embedding found for movie: {movie.title_en}")  # Log missing embeddings
-#
-#                 # Ensure the movie embeddings list is not empty
-#                 if not movie_embeddings_list:
-#                     return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
-#
-#                 movie_embeddings_array = np.array(movie_embeddings_list)
-#
-#                 # Compute cosine similarity between user description and movie embeddings
-#                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
-#
-#                 # Sort movies by similarity score in descending order
-#                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
-#                 filtered_movies = [movie for movie, _ in filtered_movies]
-#
-#             # Limit results to top 20 recommended movies
-#             recommended_movies = filtered_movies[:20]
-#
-#             # Prepare the response data for the recommended movies
-#             response_data = [
-#                 {
-#                     'id': movie.id,
-#                     'title_en': movie.title_en,
-#                     'title_th': movie.title_th,
-#                     'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
-#                     'poster_path': movie.poster_path,
-#                 }
-#                 for movie in recommended_movies
-#             ]
-#
-#             return JsonResponse({
-#                 "success": True,
-#                 "recommended_movies": response_data
-#             })
-#
-#         except Exception as e:
-#             print(f"Error: {str(e)}")
-#             return JsonResponse({"error": str(e)}, status=500)
-#
-#     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
-
 @csrf_exempt
 def recommend_movies_advanced(request):
     if request.method == 'POST':
@@ -702,7 +479,9 @@ def recommend_movies_advanced(request):
             start_date = data.get('start_date', "")
             end_date = data.get('end_date', "")
 
-            print(f"Applied Filters: Genre: {genre}, Cast: {cast}, Description: {description}, Date: {start_date} to {end_date}")
+            # Check if at least one filter is provided
+            if not any([genre, cast, description, start_date, end_date]):
+                return JsonResponse({"error": "Please fill in at least one field."}, status=400)
 
             # Load precomputed movie embeddings
             movie_embeddings = load_embeddings()
@@ -713,20 +492,51 @@ def recommend_movies_advanced(request):
             # Apply filters to the Movie model
             filtered_movies = Movie.objects.all()
 
-            # Filter by genre
-            if genre in genre_keywords:
-                filtered_movies = filtered_movies.filter(genres__icontains=genre)
+            # Filter by genre if provided (like 'Crime', 'Romance', etc.)
+            if genre:
+                # Convert English category to Thai
+                category_thai = GENRE_MAPPING.get(genre, genre)  # Default to input if not found
+                print(f"🔍 Searching for movies in category: {category_thai}")  # Debugging
+
+                # Check if genres are stored as JSON or lists
+                try:
+                    filtered_movies = [
+                        movie for movie in filtered_movies if category_thai in json.loads(movie.genres)
+                    ]
+                except (TypeError, json.JSONDecodeError):
+                    # If genres are already lists
+                    filtered_movies = [
+                        movie for movie in filtered_movies if category_thai in movie.genres
+                    ]
+
+                print(f"Filtered by genre: {category_thai}, movies found: {len(filtered_movies)}")  # Debugging
+
             # Filter by cast
             if cast:
-                filtered_movies = filtered_movies.filter(cast__icontains=cast)
+                print(f"Filtering by cast: {cast}")  # Debugging
+                filtered_movies = [
+                    movie for movie in filtered_movies if any(cast.lower() in actor.lower() for actor in movie.cast)
+                ]
+                print(f"Movies found after filtering by cast: {len(filtered_movies)}")  # Debugging
+
             # Filter by date range
             if start_date and end_date:
-                filtered_movies = filtered_movies.filter(release_date__range=[start_date, end_date])
+                try:
+                    # Convert string dates to datetime objects
+                    start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
 
-            print(f"Filtered movies count after applying filters: {filtered_movies.count()}")
+                    print(f"Filtering by date range: {start_date} to {end_date}")  # Debugging
+                    filtered_movies = [
+                        movie for movie in filtered_movies if start_date <= movie.release_date <= end_date
+                    ]
+                    print(f"Movies found after filtering by date range: {len(filtered_movies)}")  # Debugging
+                except ValueError:
+                    return JsonResponse({"error": "Invalid date format. Please use 'YYYY-MM-DD'."}, status=400)
 
             # If description is provided, compute similarity
             if description:
+                print(f"Filtering by description: {description}")  # Debugging
                 user_embedding = get_embedding(description).reshape(1, -1)
 
                 # Ensure the user embedding is valid (2D)
@@ -751,21 +561,22 @@ def recommend_movies_advanced(request):
                 # Compute cosine similarity between user description and movie embeddings
                 similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
 
-                print(f"Similarities: {similarities}")
+                print(f"Similarities: {similarities}")  # Debugging
 
                 # Sort movies by similarity score in descending order
                 filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
                 filtered_movies = [movie for movie, _ in filtered_movies]
 
+            print(f"Filtered movies count after applying all filters: {len(filtered_movies)}")
+
             # Limit results to top 20 recommended movies
             recommended_movies = filtered_movies[:20]
 
             if not recommended_movies:
-                print("No recommended movies found.")
                 return JsonResponse({"error": "No recommended movies found."}, status=404)
 
-            # Prepare the response data for the recommended movies
-            response_data = [
+            # Save the recommended movies in session
+            request.session['recommend_movies_advanced'] = [
                 {
                     'id': movie.id,
                     'title_en': movie.title_en,
@@ -776,28 +587,24 @@ def recommend_movies_advanced(request):
                 for movie in recommended_movies
             ]
 
-            return JsonResponse({
-                "success": True,
-                "recommended_movies": response_data
-            })
+            return JsonResponse({"success": True, "recommended_movies": request.session['recommend_movies_advanced']})
 
         except Exception as e:
             print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
-
-
 def movies_advance(request):
     # Fetch recommended movies from the session (if any)
-    recommended_movies = request.session.get('recommended_movies', [])
+    recommended_movies = request.session.get('recommend_movies_advanced', [])
 
-    # If no movies in the session, you can fetch all movies or any specific category
+    # If no movies in the session, fetch the first 20 movies from the database
     if not recommended_movies:
-        recommended_movies = Movie.objects.all()
+        recommended_movies = Movie.objects.all()[:20]  # Limit to the first 20 movies
 
     # Pass the movies to the template
     return render(request, 'movies_advance.html', {'movies': recommended_movies})
+
 
 
 @login_required
