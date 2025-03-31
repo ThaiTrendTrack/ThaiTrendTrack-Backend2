@@ -185,6 +185,8 @@ def movie_detail(request, movie_id):
     return render(request, 'movies_detailed.html', {'movie': movie})
 
 
+
+
 GENRE_MAPPING = {
     "Action": "บู๊",
     "Crime": "อาชญากรรม",
@@ -224,20 +226,30 @@ def signup(request):
 
 
 # Login Function
+# def custom_login(request):
+#     if request.method == 'POST':
+#         form = AuthenticationForm(request, data=request.POST)
+#         if form.is_valid():
+#             user = form.get_user()
+#             auth_login(request, user)
+#
+#             # Check if first login
+#             user_profile, created = UserProfile.objects.get_or_create(user=user)
+#             if user_profile.is_first_login:
+#                 user_profile.is_first_login = False
+#                 user_profile.save()
+#                 return redirect('preferences')
+#             return redirect('homepage')  # Redirect to homepage on subsequent logins
+#     else:
+#         form = AuthenticationForm()
+#     return render(request, 'login.html', {'form': form})
 def custom_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-
-            # Check if first login
-            user_profile, created = UserProfile.objects.get_or_create(user=user)
-            if user_profile.is_first_login:
-                user_profile.is_first_login = False
-                user_profile.save()
-                return redirect('preferences')
-            return redirect('homepage')  # Redirect to homepage on subsequent logins
+            return redirect('homepage')  # เปลี่ยนเส้นทางไปที่ homepage
     else:
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})

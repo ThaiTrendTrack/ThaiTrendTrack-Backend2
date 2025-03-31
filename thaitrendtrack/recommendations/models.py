@@ -172,4 +172,4 @@ class Like(models.Model):
         unique_together = ('user', 'post')  # Ensure a user can only like a post once
 
     def __str__(self):
-        return f"Like by {self.user.username}"
+     

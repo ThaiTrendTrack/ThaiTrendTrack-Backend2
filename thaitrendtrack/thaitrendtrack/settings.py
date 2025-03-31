@@ -134,16 +134,3 @@ LOGIN_REDIRECT_URL = '/homepage/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/tmp/django_cache",  # Change this path if needed
-    }
-}
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-CORS_ALLOW_ALL_ORIGINS = True
-
-LOGOUT_REDIRECT_URL = 'homepage'
