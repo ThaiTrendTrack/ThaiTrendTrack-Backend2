@@ -1,41 +1,175 @@
-import numpy as np
-from django.db.models.functions import Coalesce
-from django.shortcuts import render, redirect, get_object_or_404
+import os
+from django.conf import settings
+from django.http import JsonResponse, HttpResponseRedirect
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login as auth_login, logout
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login as auth_login
-from .models import UserProfile, Movie
-from .forms import CustomUserCreationForm
-from transformers import AutoTokenizer, AutoModel
+from django.shortcuts import get_object_or_404, redirect
 from datetime import datetime
-from django.db.models import Q
+
+import json
 import torch
+from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import pickle
+from deep_translator import GoogleTranslator
 
-from django.http import JsonResponse
+from .forms import CustomUserCreationForm
+from .models import Community, Post, Comment, Poll, Hashtag, Movie, Vote  # Combined all model imports
+from django.shortcuts import render, redirect
+from .forms import ProfileUpdateForm
+from .models import UserProfile
 
-# Load Tokenizer and Model
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-model = AutoModel.from_pretrained("bert-base-uncased")
+# ✅ โหลดโมเดล
+tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+model = AutoModel.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+model.eval()
+
+# ✅ โหลด embeddings
+embedding_file = "movie_embeddings.pkl"
+try:
+    with open(embedding_file, "rb") as f:
+        movie_embeddings = pickle.load(f)
+    movie_embeddings = np.array(movie_embeddings).reshape(len(movie_embeddings), -1)
+    print("✅ Loaded precomputed embeddings from file.")
+except FileNotFoundError:
+    print("❌ Error: Embeddings file not found. Please generate embeddings first.")
+    movie_embeddings = None
 
 
-# def movie_detail(request, movie_id):
-#     movie = get_object_or_404(Movie, id=movie_id)
-#     data = {
-#         "english_title": movie.title_en,  # Ensure your field names match
-#         "thai_title": movie.title_th,
-#         "release_date": movie.release_date.strftime("%Y"),
-#         "description": movie.description,
-#     }
-#     return JsonResponse(data)
-
-def movie_detail(request, movie_id):
-    movie = get_object_or_404(Movie, id=movie_id)
-    return render(request, 'movies_detailed.html', {'movie': movie})
+def logout_view(request):
+    logout(request)  # This will log the user out
+    return redirect('homepage')
 
 
-from django.shortcuts import render
+# ✅ ฟังก์ชันแปลภาษาเป็นไทย
+def translate_to_thai(text):
+    return GoogleTranslator(source="auto", target="th").translate(text)
+
+
+# ✅ ฟังก์ชันแปลงข้อความเป็น embedding
+def get_embedding(text):
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :].squeeze(0).numpy()
+
+
+# ✅ ฟังก์ชันตรวจจับแนวหนัง
+def detect_genre(description):
+    genre_keywords = {
+        "โรแมนติก": ["รัก", "โรแมนติก", "แฟน", "ความรัก", "อกหัก", "หวาน"],
+        "สยองขวัญ": ["ผี", "สยองขวัญ", "น่ากลัว", "หลอน", "ฆาตกรรม", "วิญญาณ"],
+        "แอคชั่น": ["บู๊", "แอคชั่น", "ต่อสู้", "ยิง", "ระเบิด"],
+        "ตลก": ["ตลก", "ขำ", "ฮา", "สนุก"],
+        "ดราม่า": ["ดราม่า", "ชีวิต", "เศร้า", "น้ำตา", "ซึ้ง"],
+        "วิทยาศาสตร์": ["ไซไฟ", "วิทยาศาสตร์", "หุ่นยนต์", "อนาคต"],
+        "แฟนตาซี": ["เวทมนตร์", "แฟนตาซี", "เทพนิยาย", "อัศวิน"],
+        "อาชญากรรม": ["อาชญากรรม", "ตำรวจ", "นักสืบ", "สืบสวน"],
+    }
+
+    for genre, keywords in genre_keywords.items():
+        if any(keyword in description.lower() for keyword in keywords):
+            return genre
+
+    return None  # ถ้าไม่พบแนวที่ชัดเจน
+
+
+# ✅ Django View สำหรับค้นหาหนังที่คล้ายกับข้อความที่ป้อน
+def definition_movies(request):
+    query_text = request.GET.get("searchQuery", "").strip()
+
+    if not query_text:
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
+
+    print(f"🔎 Searching for: {query_text}")
+
+    # ✅ แปลข้อความเป็นไทย
+    query_text_thai = translate_to_thai(query_text)
+    print(f"🔄 แปลงเป็นไทย: {query_text_thai}")
+
+    # ✅ ตรวจจับแนวหนังจากคำบรรยาย
+    detected_genre = detect_genre(query_text_thai)
+    if detected_genre:
+        print(f"🎭 แนวหนังที่พบ: **{detected_genre}**")
+
+    # ✅ คำนวณ embedding ของข้อความค้นหา
+    query_embedding = np.array(get_embedding(query_text_thai)).reshape(1, -1)
+
+    # ✅ โหลดข้อมูลหนังจาก Database
+    movies = Movie.objects.exclude(embedding__isnull=True)
+
+    if not movies.exists():
+        print("⚠️ ไม่มีหนังที่มี embeddings!")
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
+
+    # ✅ โหลด embeddings จาก Movie Model
+    movie_embeddings = []
+    movie_list = []
+
+    for movie in movies:
+        if movie.embedding:
+            emb = np.array(pickle.loads(movie.embedding)).reshape(1, -1)
+            movie_embeddings.append(emb)
+            movie_list.append(movie)
+
+    movie_embeddings = np.vstack(movie_embeddings)
+    print(f"✅ Movie Embeddings Shape: {movie_embeddings.shape}")
+
+    # ✅ คำนวณ Cosine Similarity
+    similarities = cosine_similarity(query_embedding, movie_embeddings).flatten()
+
+    # ✅ Normalize similarity scores
+    min_sim, max_sim = similarities.min(), similarities.max()
+    similarities = (similarities - min_sim) / (max_sim - min_sim) if max_sim > min_sim else similarities
+
+    print(f"✅ Normalized Similarities: {similarities}")
+
+    # ✅ จัดเรียงผลลัพธ์ตาม similarity
+    ranked_movies = sorted(zip(movie_list, similarities), key=lambda x: x[1], reverse=True)
+
+    # ✅ กรองหนังที่ตรงแนวกับที่ค้นหา
+    recommended_movies = []
+    seen_movies = set()
+
+    for m, sim in ranked_movies:
+        if m.id not in seen_movies and sim > 0.3:
+            recommended_movies.append({
+                "id": m.id,
+                "title_en": m.title_en,
+                "title_th": m.title_th,
+                "release_date": m.release_date.strftime("%Y") if m.release_date else "N/A",
+                "poster_path": m.poster_path
+            })
+            seen_movies.add(m.id)
+
+    if not recommended_movies:
+        print("⚠️ ไม่พบหนังที่คล้ายกัน")
+        return render(request, "definition_movies.html", {"movies": [], "search_query": query_text})
+
+    return render(request, "definition_movies.html", {"movies": recommended_movies[:5], "search_query": query_text})
+
+
+def movies_by_category(request, category):
+    # Convert English category to Thai
+    category_thai = GENRE_MAPPING.get(category, category)  # Default to input if not found
+    print(f"🔍 Searching for movies in category: {category} ({category_thai})")  # Debugging
+
+    # Check if genres are stored as JSON or strings
+    try:
+        movies = [movie for movie in Movie.objects.all() if category_thai in json.loads(movie.genres)]
+    except TypeError:  # If genres are already lists
+        movies = [movie for movie in Movie.objects.all() if category_thai in movie.genres]
+
+    print(f"✅ Found {len(movies)} movies in category: {category} ({category_thai})")  # Debugging
+
+    context = {
+        "category": category,
+        "movies": movies,
+    }
+    return render(request, "movies_category.html", context)
 
 
 def login_view(request):
@@ -46,35 +180,13 @@ def signup_view(request):
     return render(request, 'signup.html')
 
 
-# Function to convert text to embeddings
-# def get_embeddings(text):
-#     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-#     outputs = model(**inputs)
-#     return outputs.last_hidden_state.mean(dim=1)
+def movie_detail(request, movie_id):
+    movie = get_object_or_404(Movie, id=movie_id)
+    return render(request, 'movies_detailed.html', {'movie': movie})
 
 
-# # Genre mapping dictionary
-# GENRE_MAPPING = {
-#     "Action": "บู๊",
-#     "Adventure": "ผจญ",
-#     "Crime": "อาชญากรรม",
-#     "Drama": "หนังชีวิต",
-#     "Thriller": "ระทึกขวัญ",
-#     "Horror": "สยองขวัญ",
-#     "Animation": "แอนนิเมชั่น",
-#     "Fantasy": "จินตนาการ",
-#     "Romance": "หนังรักโรแมนติก",
-#     "Science Fiction": "นิยายวิทยาศาสตร์",
-#     "Documentary": "สารคดี",
-#     "Comedy": "ตลก",
-#     "Western": "หนังคาวบอยตะวันตก",
-#     "Mystery": "ลึกลับ",
-#     "War": "สงคราม",
-#     "History": "ประวัติศาสตร์",
-#     "Music": "ดนตรี",
-#     "Family": "ครอบครัว",
-#     "TV Movie": "ภาพยนตร์โทรทัศน์"
-# }
+
+
 GENRE_MAPPING = {
     "Action": "บู๊",
     "Crime": "อาชญากรรม",
@@ -248,7 +360,16 @@ def get_embeddings(text):
     return outputs.last_hidden_state.mean(dim=1).detach().numpy()
 
 
-# Function to handle movie search
+def search_movie_by_title(request):
+    query = request.GET.get('searchQuery', '')
+    if query:
+        # Filter movies based on the title (support multiple languages if needed)
+        movies = Movie.objects.filter(title_en__icontains=query) | Movie.objects.filter(title_th__icontains=query)
+    else:
+        movies = Movie.objects.all()
+    return render(request, 'movies_search.html', {'movies': movies})
+
+
 def search_movies(request):
     if request.method == "GET":
         query = request.GET.get("searchQuery", "").strip()
@@ -313,8 +434,654 @@ def recommend_movies(request):
         return render(request, "recommend.html", {"movies": recommended_movies})  # Use recommend.html
 
 
-# Homepage Function
+def settings_view(request):
+    return render(request, 'settings.html')
+
+
+# Load pre-trained tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+model = AutoModel.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+
+# Function to load precomputed movie embeddings
+# Load embeddings
+def load_embeddings():
+    embedding_file = "movie_embeddings.pkl"
+    try:
+        with open(embedding_file, "rb") as f:
+            embeddings = pickle.load(f)
+        return np.array(embeddings).reshape(len(embeddings), -1)
+    except FileNotFoundError:
+        print("❌ Error: Embeddings file not found.")
+        return None
+
+
+def get_embedding_advanced(text):
+    prompt = f"ให้คำแนะนำหนังที่ตรงกับคำอธิบายต่อไปนี้: '{text}' โดยคำนึงถึงแนวหนัง เรื่องย่อ และความนิยม"
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    return outputs.last_hidden_state[:, 0, :].squeeze(0).numpy()
+
+
+# Genre categories
+genre_keywords = {
+    "โรแมนติก": ["รัก", "โรแมนติก", "แฟน", "ความรัก", "อกหัก", "หวาน"],
+    "สยองขวัญ": ["ผี", "สยองขวัญ", "น่ากลัว", "หลอน", "ฆาตกรรม", "วิญญาณ"],
+    "แอคชั่น": ["บู๊", "แอคชั่น", "ต่อสู้", "ยิง", "ระเบิด"],
+    "ตลก": ["ตลก", "ขำ", "ฮา", "สนุก"],
+    "ดราม่า": ["ดราม่า", "ชีวิต", "เศร้า", "น้ำตา", "ซึ้ง"],
+    "วิทยาศาสตร์": ["ไซไฟ", "วิทยาศาสตร์", "หุ่นยนต์", "อนาคต"],
+    "แฟนตาซี": ["เวทมนตร์", "แฟนตาซี", "เทพนิยาย", "อัศวิน"],
+    "อาชญากรรม": ["อาชญากรรม", "ตำรวจ", "นักสืบ", "สืบสวน"]
+}
+
+
+# Function to get recommended movies based on filters
+@csrf_exempt
+def recommend_movies_advanced(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            # Get filters from the request body
+            genre = data.get('genre', "")
+            cast = data.get('cast', "")
+            description = data.get('description', "")
+            start_date = data.get('start_date', "")
+            end_date = data.get('end_date', "")
+
+            # Check if at least one filter is provided
+            if not any([genre, cast, description, start_date, end_date]):
+                return JsonResponse({"error": "Please fill in at least one field."}, status=400)
+
+            # Load precomputed movie embeddings
+            movie_embeddings = load_embeddings()
+
+            if movie_embeddings is None:
+                raise Exception("Embeddings file not found")
+
+            # Apply filters to the Movie model
+            filtered_movies = Movie.objects.all()
+
+            # Filter by genre if provided (like 'Crime', 'Romance', etc.)
+            if genre:
+                # Convert English category to Thai
+                category_thai = GENRE_MAPPING.get(genre, genre)  # Default to input if not found
+                print(f"🔍 Searching for movies in category: {category_thai}")  # Debugging
+
+                # Check if genres are stored as JSON or lists
+                try:
+                    filtered_movies = [
+                        movie for movie in filtered_movies if category_thai in json.loads(movie.genres)
+                    ]
+                except (TypeError, json.JSONDecodeError):
+                    # If genres are already lists
+                    filtered_movies = [
+                        movie for movie in filtered_movies if category_thai in movie.genres
+                    ]
+
+                print(f"Filtered by genre: {category_thai}, movies found: {len(filtered_movies)}")  # Debugging
+
+            # Filter by cast
+            if cast:
+                print(f"Filtering by cast: {cast}")  # Debugging
+                filtered_movies = [
+                    movie for movie in filtered_movies if any(cast.lower() in actor.lower() for actor in movie.cast)
+                ]
+                print(f"Movies found after filtering by cast: {len(filtered_movies)}")  # Debugging
+
+            # Filter by date range
+            if start_date and end_date:
+                try:
+                    # Convert string dates to datetime objects
+                    start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+                    end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                    print(f"Filtering by date range: {start_date} to {end_date}")  # Debugging
+                    filtered_movies = [
+                        movie for movie in filtered_movies if start_date <= movie.release_date <= end_date
+                    ]
+                    print(f"Movies found after filtering by date range: {len(filtered_movies)}")  # Debugging
+                except ValueError:
+                    return JsonResponse({"error": "Invalid date format. Please use 'YYYY-MM-DD'."}, status=400)
+
+            # If description is provided, compute similarity
+            if description:
+                print(f"Filtering by description: {description}")  # Debugging
+                user_embedding = get_embedding(description).reshape(1, -1)
+
+                # Ensure the user embedding is valid (2D)
+                if user_embedding.shape[1] == 0:
+                    return JsonResponse({"error": "User embedding has zero features."}, status=400)
+
+                # Prepare list of movie embeddings to compare
+                movie_embeddings_list = []
+                for movie in filtered_movies:
+                    if movie.embedding:
+                        movie_embedding = pickle.loads(movie.embedding)  # Deserialize the stored embedding
+                        movie_embeddings_list.append(movie_embedding)
+                    else:
+                        print(f"Warning: No embedding found for movie: {movie.title_en}")  # Log missing embeddings
+
+                # Ensure the movie embeddings list is not empty
+                if not movie_embeddings_list:
+                    return JsonResponse({"error": "No movie embeddings found for comparison."}, status=400)
+
+                movie_embeddings_array = np.array(movie_embeddings_list)
+
+                # Compute cosine similarity between user description and movie embeddings
+                similarities = cosine_similarity(user_embedding, movie_embeddings_array).flatten()
+
+                print(f"Similarities: {similarities}")  # Debugging
+
+                # Sort movies by similarity score in descending order
+                filtered_movies = sorted(zip(filtered_movies, similarities), key=lambda x: x[1], reverse=True)
+                filtered_movies = [movie for movie, _ in filtered_movies]
+
+            print(f"Filtered movies count after applying all filters: {len(filtered_movies)}")
+
+            # Limit results to top 20 recommended movies
+            recommended_movies = filtered_movies[:20]
+
+            if not recommended_movies:
+                return JsonResponse({"error": "No recommended movies found."}, status=404)
+
+            # Save the recommended movies in session
+            request.session['recommend_movies_advanced'] = [
+                {
+                    'id': movie.id,
+                    'title_en': movie.title_en,
+                    'title_th': movie.title_th,
+                    'release_date': movie.release_date.strftime('%Y') if movie.release_date else 'N/A',
+                    'poster_path': movie.poster_path,
+                }
+                for movie in recommended_movies
+            ]
+
+            return JsonResponse({"success": True, "recommended_movies": request.session['recommend_movies_advanced']})
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=400)
+def movies_advance(request):
+    # Fetch recommended movies from the session (if any)
+    recommended_movies = request.session.get('recommend_movies_advanced', [])
+
+    # If no movies in the session, fetch the first 20 movies from the database
+    if not recommended_movies:
+        recommended_movies = Movie.objects.all()[:20]  # Limit to the first 20 movies
+
+    # Pass the movies to the template
+    return render(request, 'movies_advance.html', {'movies': recommended_movies})
+
+
+
 @login_required
 def homepage(request):
-    movies = Movie.objects.all().order_by('-popularity')[:10]  # ดึงมาแค่ 10 เรื่อง
-    return render(request, 'homepage.html', {'movies': movies})
+    movies = Movie.objects.filter(content_type="Movie")[:10]
+    series = Movie.objects.filter(content_type="TV Series")[:10]
+
+    print("Movies in context:", movies.count())
+    print("Series in context:", series.count())  # ✅ Debug
+
+    return render(request, 'homepage.html', {
+        'movies': movies,
+        'series': series
+    })
+
+
+ALL_GENRES = [
+    "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
+    "Drama", "Family", "Fantasy", "History", "Horror", "Music", "Mystery",
+    "Romance", "Science Fiction", "Thriller", "TV Movie", "War", "Western"
+]
+
+
+@login_required
+def settings_view(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        new_preferences = request.POST.getlist("preferences")  # Get updated preferences
+        user_profile.preferences = new_preferences  # Save new preferences
+        user_profile.save()
+        return redirect("settings")  # Refresh page after saving
+
+    context = {
+        "username": request.user.username,
+        "email": request.user.email,
+        "preferences": user_profile.preferences,  # Previously selected preferences
+        "available_genres": ALL_GENRES,  # All possible genres
+    }
+    return render(request, "settings.html", context)
+
+
+@login_required
+def save_preferences(request):
+    if request.method == "POST":
+        selected_preferences = request.POST.getlist("genres[]")  # Get selected genres
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        user_profile.preferences = selected_preferences
+        user_profile.save()
+        return JsonResponse({"success": True})  # ✅ Return JSON success response
+
+    return render(request, "edit_preferences.html")
+
+
+def update_profile(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            return redirect('settings')  # Redirect back to settings page
+
+    else:
+        form = ProfileUpdateForm(instance=user_profile)
+
+    return render(request, 'update_profile.html', {'form': form})
+
+
+@login_required
+def community_home(request):
+    selected_club = request.GET.get('club')  # Get the selected club ID from the request
+    communities = Community.objects.all()  # Get all communities
+    if selected_club:
+        # Filter posts by selected club
+        community = get_object_or_404(Community, id=selected_club)
+        posts = Post.objects.filter(community=community).order_by('-created_at')
+    else:
+        # If no club is selected, show all posts
+        posts = Post.objects.all().order_by('-created_at')
+
+    return render(request, 'communities.html', {'communities': communities, 'posts': posts})
+
+
+@login_required
+def create_post(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        Post.objects.create(community=community, user=request.user, content=content)
+        return redirect('community_home', community_id=community.id)
+
+
+@login_required
+def settings_view(request):
+    user_profile = request.user.userprofile  # Access the user profile information
+    return render(request, 'settings.html', {'user_profile': user_profile})
+
+
+@login_required
+def update_profile(request):
+    user_profile = request.user.userprofile  # Get the logged-in user's profile
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            return redirect('settings')  # Redirect back to the settings page
+    else:
+        form = ProfileUpdateForm(instance=user_profile)
+
+    return render(request, 'update_profile.html', {'form': form})
+
+
+# @login_required
+# def community_home(request):
+#     selected_club = request.GET.get('club')
+#     communities = Community.objects.all()
+#     posts = Post.objects.all().order_by('-created_at')
+#
+#     if selected_club:
+#         community = get_object_or_404(Community, name=selected_club)
+#         posts = Post.objects.filter(community=community).order_by('-created_at')
+#
+#     if request.method == 'POST':
+#         # Handle comment submission
+#         if 'comment' in request.POST:
+#             post_id = request.POST.get('post_id')
+#             comment_content = request.POST.get('comment')
+#             post = get_object_or_404(Post, id=post_id)
+#             Comment.objects.create(post=post, user=request.user, content=comment_content)
+#             return redirect('community_home')
+#
+#         # Handle new post creation with poll and hashtags
+#         content = request.POST.get('content')
+#         image = request.FILES.get('image')
+#         community_id = request.POST.get('community_id')
+#         community = get_object_or_404(Community, id=community_id)
+#
+#         # Handle Hashtag Creation
+#         hashtags_input = request.POST.get('hashtags')  # Get the hashtags input as a comma-separated string
+#         hashtags = [Hashtag.objects.get_or_create(name=tag.strip())[0] for tag in
+#                     hashtags_input.split(',')]  # Create or get existing hashtags
+#
+#         # Create the post
+#         new_post = Post.objects.create(
+#             community=community,
+#             user=request.user,
+#             content=content,
+#             image=image
+#         )
+#
+#         # Assign hashtags to the post
+#         new_post.hashtags.set(hashtags)
+#         new_post.save()
+#
+#         # Handle Poll Creation
+#         poll_question = request.POST.get('poll_question')
+#         poll_choices = request.POST.getlist('poll_choices')
+#         for key in request.POST:
+#             if key.startswith("poll_choice_"):
+#                 poll_choices.append(request.POST[key])
+#         if poll_question and poll_choices:
+#             poll = Poll.objects.create(
+#                 question=poll_question,
+#                 choices=poll_choices  # Store choices as a list
+#             )
+#         new_post.poll = poll
+#         new_post.save()
+#
+#         # Display poll choices and their counts
+#         for post in posts:
+#             if post.poll:
+#                 # Get the choices from the poll and count the votes for each
+#                 post.poll.vote_counts = {
+#                     choice: post.poll.votes.filter(choice=choice).count()
+#                     for choice in post.poll.choices
+#                 }
+#
+#         return redirect('community_home')
+#
+#     # Calculate vote counts for each post with polls
+#     for post in posts:
+#         if post.poll:
+#             post.poll.vote_counts = {
+#                 choice: post.poll.votes.filter(choice=choice).count()
+#                 for choice in post.poll.choices
+#             }
+#
+#     return render(request, 'communities.html', {
+#         'communities': communities,
+#         'posts': posts,
+#         'selected_club': selected_club,
+#     })
+
+@login_required
+def community_home(request):
+    selected_club = request.GET.get('club')
+    communities = Community.objects.all()
+    posts = Post.objects.all().order_by('-created_at')
+
+    # Filter posts by selected club
+    if selected_club:
+        community = get_object_or_404(Community, name=selected_club)
+        posts = Post.objects.filter(community=community).order_by('-created_at')
+
+    if request.method == 'POST':
+        # Handle comment submission
+        if 'comment' in request.POST:
+            post_id = request.POST.get('post_id')
+            comment_content = request.POST.get('comment')
+            post = get_object_or_404(Post, id=post_id)
+            Comment.objects.create(post=post, user=request.user, content=comment_content)
+            return redirect('community_home')
+
+        # Handle new post creation with poll and hashtags
+        content = request.POST.get('content')
+        image = request.FILES.get('image')
+        community_id = request.POST.get('community_id')
+        community = get_object_or_404(Community, id=community_id)
+
+        # Handle Hashtag Creation
+        hashtags_input = request.POST.get('hashtags')  # Get the hashtags input as a comma-separated string
+        hashtags = [Hashtag.objects.get_or_create(name=tag.strip())[0] for tag in
+                    hashtags_input.split(',')]  # Create or get existing hashtags
+
+        # Create the post
+        new_post = Post.objects.create(
+            community=community,
+            user=request.user,
+            content=content,
+            image=image
+        )
+
+        # Assign hashtags to the post
+        new_post.hashtags.set(hashtags)
+        new_post.save()
+
+        # Handle Poll Creation
+        poll_question = request.POST.get('poll_question')
+        poll_choices_raw = request.POST.get('poll_choices')  # รับค่าเป็นสตริง
+        poll_choices = [choice.strip() for choice in poll_choices_raw.split(',') if choice.strip()]
+        for key in request.POST:
+            if key.startswith("poll_choice_"):
+                poll_choices.append(request.POST[key])
+
+        # If poll question and choices are provided, create a new poll
+        if poll_question and poll_choices:
+            poll = Poll.objects.create(
+                question=poll_question,
+                choices=poll_choices  # Store choices as a list
+            )
+            new_post.poll = poll
+            new_post.save()
+
+        return redirect('community_home')
+
+    # Calculate vote counts and percentages for each post with polls
+    for post in posts:
+        if post.poll:
+            vote_counts = {choice: post.poll.votes.filter(choice=choice).count() for choice in post.poll.choices}
+            total_votes = sum(vote_counts.values())
+
+            # Calculate vote percentages
+            vote_percentages = {choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in
+                                vote_counts.items()}
+
+            # Find the leading choice and its percentage
+            leading_choice = max(vote_percentages, key=vote_percentages.get, default=None)
+            leading_percent = vote_percentages.get(leading_choice, 0)
+
+            # Add vote counts and percentages to the post
+            post.poll.vote_counts = vote_counts
+            post.poll.vote_percentages = vote_percentages
+            post.poll.leading_choice = leading_choice
+            post.poll.leading_percent = leading_percent
+
+    return render(request, 'communities.html', {
+        'communities': communities,
+        'posts': posts,
+        'selected_club': selected_club,
+    })
+
+
+@login_required
+def create_post(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        image = request.FILES.get('image')
+        Post.objects.create(community=community, user=request.user, content=content, image=image)
+        return redirect('community_home')
+
+    return render(request, 'create_post.html', {'community': community})
+
+
+@login_required
+def comment_on_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        Comment.objects.create(post=post, user=request.user, content=content)
+        return redirect('community_home')
+
+
+@login_required
+def hashtag_posts(request, hashtag_name):
+    # Retrieve the hashtag object from the database
+    hashtag = Hashtag.objects.get(name=hashtag_name)
+
+    # Retrieve posts that contain the given hashtag
+    posts = Post.objects.filter(hashtags=hashtag).order_by('-created_at')
+
+    # Return the posts to the template
+    return render(request, 'communities.html', {
+        'posts': posts,
+        'selected_club': 'all',  # If you have a selected club, you can modify this
+        'hashtag': hashtag_name
+    })
+
+
+@login_required
+def like_post(request, post_id):
+    if request.method == "POST":
+        try:
+            post = get_object_or_404(Post, id=post_id)
+
+            # Check if the user has already liked the post
+            if post.likes.filter(id=request.user.id).exists():
+                # If liked, unlike by removing the user from the likes
+                post.likes.remove(request.user)
+                is_liked = False
+            else:
+                # If not liked, add the user to the likes
+                post.likes.add(request.user)
+                is_liked = True
+
+            post.save()
+
+            # Return the updated like count and like status (liked or unliked)
+            return JsonResponse({'likes_count': post.likes.count(), 'is_liked': is_liked}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# Delete Comment View
+
+def delete_comment(request, comment_id):
+    if request.method == 'POST':
+        comment = get_object_or_404(Comment, id=comment_id)
+
+        # Ensure the user is the author of the comment
+        if comment.user == request.user:
+            comment.delete()
+            return JsonResponse({'message': 'Comment deleted successfully'}, status=200)
+
+        return JsonResponse({'error': 'You can only delete your own comments'}, status=403)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# View to delete post
+def delete_post(request, post_id):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, id=post_id)
+
+        # Ensure that the user is the owner of the post
+        if post.user == request.user:
+            post.delete()
+            return JsonResponse({'message': 'Post deleted successfully'}, status=200)
+        else:
+            return JsonResponse({'error': 'You can only delete your own posts'}, status=403)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+def vote(request, poll_id):
+    poll = get_object_or_404(Poll, id=poll_id)  # หา Poll ตาม id
+
+    if request.method == "POST":
+        choice = request.POST.get('choice')  # รับข้อมูลตัวเลือกที่ผู้ใช้เลือก
+
+        if choice:
+            # สร้างการโหวตใหม่
+            Vote.objects.create(
+                user=request.user,  # ผู้ใช้ที่ทำการโหวต
+                poll=poll,  # Poll ที่ทำการโหวต
+                choice=choice  # ตัวเลือกที่เลือก
+            )
+
+            # ส่งผู้ใช้กลับไปยังหน้าโพสต์หรือที่อื่นๆ
+            return redirect('poll_results', poll_id=poll.id)
+    else:
+        # ถ้าไม่ได้ใช้ POST ให้แสดงผลลัพธ์
+        return render(request, 'vote.html', {'poll': poll})
+
+
+def poll_results(request, poll_id):
+    poll = get_object_or_404(Poll, id=poll_id)
+    votes = Vote.objects.filter(poll=poll)
+
+    # สรุปผลการโหวต
+    results = {choice: votes.filter(choice=choice).count() for choice in poll.get_choices}
+
+    return render(request, 'poll_results.html', {'poll': poll, 'results': results})
+
+
+# @csrf_exempt
+# def vote(request, post_id):
+#     post = get_object_or_404(Post, id=post_id)  # Retrieve the post based on the post_id
+#     if request.method == 'POST':
+#         poll_choice = request.POST.get('poll_choice')  # Get the poll choice from the form
+#         if poll_choice:
+#             # Save the vote in the database
+#             Vote.objects.create(post=post, user=request.user, choice=poll_choice)
+#             return redirect('community_home')  # Redirect after voting
+#     return redirect('community_home')  # Redirect if method is not POST or no choice is selected
+
+@csrf_exempt
+def vote(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    poll_choice = request.POST.get('poll_choice')  # Ensure you have the poll choice from the form
+
+    if poll_choice is None:
+        print("Poll choice was not passed correctly")
+        return redirect('community_home')  # Handle this case more gracefully, maybe with an error message
+
+    # Create a vote for the poll choice
+    vote = Vote.objects.create(
+        post=post,
+        user=request.user,
+        choice=poll_choice
+    )
+
+    return redirect('community_home')  # Or wherever you want to redirect
+
+
+@login_required
+def vote_poll(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    poll = post.poll
+
+    if request.method == 'POST':
+        choice = request.POST.get('poll_choice')
+        if choice is not None:
+            # Create a new vote for the selected choice
+            Vote.objects.create(
+                user=request.user,
+                poll=poll,
+                choice=poll.choices[int(choice)]
+            )
+
+            # Update vote counts and percentages
+            poll.vote_counts = {choice: poll.votes.filter(choice=choice).count() for choice in poll.choices}
+            total_votes = sum(poll.vote_counts.values())
+
+            poll.vote_percentages = {
+                choice: (count / total_votes * 100 if total_votes > 0 else 0) for choice, count in
+                poll.vote_counts.items()
+            }
+            poll.leading_choice = max(poll.vote_percentages, key=poll.vote_percentages.get)
+            poll.leading_percent = poll.vote_percentages[poll.leading_choice]
+            poll.save()
+
+            return redirect('community_home')  # Redirect to the community home page
+
+    return redirect('community_home')  # If not POST, redirect back to home

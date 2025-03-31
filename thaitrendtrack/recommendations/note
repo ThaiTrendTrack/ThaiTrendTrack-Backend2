@@ -1,0 +1,37 @@
+ <!-- ✅ Post Display Section -->
+                           {% for post in posts %}
+              <div class="post-item" id="post-{{ post.id }}">
+                <!-- Poll Section -->
+                {% if post.poll %}
+                  <div class="poll-section black-text" style="background: #f9f9f9; padding: 10px; border-radius: 8px; height: auto; width: auto;">
+                    <h4 style="margin-top: 0.5px">[POLL] {{ post.poll.question }}</h4>
+                    <form method="POST" action="{% url 'vote_poll' post.id %}">
+                      {% csrf_token %}
+                      <ul style="list-style: none; padding: 0; margin: 0;">
+                        {% for choice in post.poll.choices %}
+                          <li>
+                            <label>
+                              <input type="radio" name="poll_choice" value="{{ forloop.counter0 }}" style="margin-right: 8px;" />
+                              {{ choice }}
+                            </label>
+                            {% if post.poll.vote_counts %}
+                              <span>({{ post.poll.vote_percentages|get_percentage:choice }}%)</span>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                      <button type="submit" style="margin-top: 10px; padding: 6px 14px; border: none; border-radius: 5px; background-color: #DC0856; color: white;">Vote</button>
+                    </form>
+
+                    {% if post.poll.leading_choice %}
+                      <div style="margin-top: 12px; font-size: 16px;">
+                        <strong>Leading Choice:</strong> {{ post.poll.leading_choice }} ({{ post.poll.leading_percent }}%)
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+
+
+            {% load poll_extras %}

@@ -18,15 +18,15 @@
       }
 
       nav {
-        position: fixed;
-        width: 100%;
-        height: 90px;
-        display: flex;
-        /*justify-content: space-between;*/
-        align-items: center;
-        background-color: white;
-        padding: 0 5px;
-        z-index: 999999;
+       position: fixed;
+       width: 100%;
+       height: 90px;
+       display: flex;
+       align-items: center;
+       justify-content: space-between; /* Logo + menu on the left, icons on the right */
+       background-color: white;
+       padding: 0 5px;
+       z-index: 999999;
       }
 
       ul {
@@ -40,7 +40,7 @@
       }
 
       .logo img {
-        width: 80px;
+        width: 84px;
         height: auto;
         padding-top: 9px;
         padding-left: 15px;
@@ -70,72 +70,13 @@
         color: #DC0856;
       }
 
-      /*.search-container {*/
-      /*  position: absolute;*/
-      /*  left: 55%;*/
-      /*  transform: translateX(-50%);*/
-      /*}*/
-
-      /*.search-container {*/
-      /*  display: flex;*/
-      /*  align-items: center;*/
-      /*  margin-left: 200px;*/
-      /*}*/
-
-      /*.search {*/
-      /*  display: flex;*/
-      /*  align-items: center;*/
-      /*  padding: 14px;*/
-      /*  border-radius: 28px;*/
-      /*  height: 4px;*/
-      /*  background: whitesmoke;*/
-      /*  border: 1.5px solid black;*/
-      /*  transition: box-shadow 0.25s;*/
-      /*}*/
-
-      /*.search:focus-within {*/
-      /*  box-shadow: 0 0 4px gray;*/
-      /*}*/
-
-      /*.search-input {*/
-      /*  font-size: 14px;*/
-      /*  font-family: 'Poppins', sans-serif;*/
-      /*  color: dimgrey;*/
-      /*  outline: none;*/
-      /*  border: none;*/
-      /*  background: transparent;*/
-      /*  width: 220px;*/
-      /*  height: 10px;*/
-      /*  margin-left: 8px;*/
-      /*}*/
-
-      /*.search-input::placeholder {*/
-      /*  color: dimgray;*/
-      /*}*/
-
-      /*.search-icon {*/
-      /*  color: #DC0856*/
-      /*}*/
 
       .left-nav {
-            display: flex;
-            align-items: center;
+          display: flex;
+          align-items: center;
+          margin-left: 15px; /* Just a small left padding if desired */
       }
 
-    .search-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: white;
-        border-radius: 24px;
-        overflow: hidden;
-        width: 400px;
-        height: 42px;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-        border: 1.5px solid black;
-        z-index: 999999;
-        margin-left: 85px;
-    }
 
     .dropdown {
         background: #EEEEEE;
@@ -176,9 +117,10 @@
     }
 
       .nav-icons {
-        display: flex;
-        align-items: center;
-        margin-left: 25px;
+          display: flex;
+          align-items: center;
+          /* margin-left: -90px; <-- remove negative margin */
+          margin-right: 15px; /* optional to space from the right edge */
       }
 
       .nav-icons a {
@@ -247,64 +189,262 @@
       .line {
         margin: 0 8px;
       }
-    </style>
+
+      .search-container {
+          display: flex;
+          align-items: center;
+          background: white;
+          border-radius: 24px;
+          width: 300px;  /* Size as desired */
+          height: 42px;
+          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+          border: 1.5px solid black;
+          z-index: 999999;
+          /* margin-left: -30px; <-- remove negative margin */
+          margin-left: 30px; /* optional positive margin if you want a gap after the menu */
+          padding: 0 10px;
+      }
+
+      .search-input {
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: black;
+            border: none;
+            background: transparent;
+            flex-grow: 1; /* ให้ input ขยายเต็มพื้นที่ */
+            padding: 10px;
+            outline: none;
+            margin-right: 5px; /* ลดระยะห่างระหว่าง input กับปุ่ม */
+            max-width: 250px;  /* จำกัดขนาดของ input */
+      }
+
+      .search-button {
+            background: transparent;
+            border: none;
+            color: #DC0856;
+            font-size: 18px;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 0 24px 24px 0; /* ปรับมุมขวาของปุ่ม */
+      }
+
+        /* Ensure the search icon is pushed to the right */
+      .search-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%; /* Makes sure it takes up full width of the container */
+      }
+
+      .material-symbols-outlined {
+            margin-left: auto; /* Pushes the icon to the far right */
+      }
+
+      .advanced-search-btn {
+              background: #DC0856;
+              color: white;
+              border: none;
+              font-size: 14px;
+              font-weight: bolder;
+              padding: 10px 16px;
+              border-radius: 10px;
+              cursor: pointer;
+              transition: 0.3s;
+              /* margin-left: -75px; <-- remove negative margin */
+              margin-left: 20px; /* small positive margin for spacing */
+      }
+
+      .popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+      }
+
+      .popup {
+                background: white;
+                padding: 20px;
+                width: 400px;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+      }
+
+      .popup h2 {
+                margin: 0 0 15px;
+                font-size: 20px;
+                font-weight: bold;
+      }
+
+      .popup label {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 5px;
+      }
+
+      .popup input, .popup select {
+                width: 100%;
+                padding: 8px;
+                font-size: 14px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-bottom: 10px;
+      }
+
+      .popup-actions {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 10px;
+      }
+
+      .cancel-btn, .apply-btn {
+                padding: 10px 16px;
+                border-radius: 5px;
+                font-size: 14px;
+                cursor: pointer;
+      }
+
+      .cancel-btn {
+                background: lightgrey;
+                color: black;
+      }
+
+      .apply-btn {
+                background: #DC0856;
+                color: white;
+                border: none;
+      }
+
+      .apply-btn:hover {
+                background: black;
+      }
+
+      .popup input[type="date"] {
+                width: 48%;
+      }
+
+      .popup .date-range {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+      }
+
+      .popup .date-range input {
+                width: 48%;
+      }
+
+      .dropdown {
+        position: relative;
+      }
+
+      .dropdown {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          outline: none;
+          font-size: 14px;
+          font-weight: bold;
+          font-family: 'Poppins', sans-serif;
+          width: auto;
+        }
+
+      .dropdown .icon {
+        cursor: pointer;
+      }
+
+      .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: white;
+          border: 2px solid #ddd;
+          border-radius: 5px;
+          min-width: 100px;
+          z-index: 9999;
+          right: 0;
+          top: 27px;
+          margin-top: 1.5px;
+        }
+
+        .dropdown-content a {
+          color: black;
+          padding: 8px 12px;
+          text-decoration: none;
+          display: block;
+          font-size: 14px;
+          text-align: center;
+          white-space: nowrap; /* Prevent line breaks, keep “Log out” together */
+        }
+
+        .dropdown-content a:hover {
+          background-color: white;
+          color: #DC0856;
+        }
+
+        .dropdown:hover .dropdown-content {
+          display: block;
+          background-color: white;
+        }
+
+
+
+</style>
 </head>
 
 <body>
     <nav>
       <div class="left-nav flex-center">
         <div class="logo">
-          <img src="/static/logo/TTT-logo1.png" alt="logo">
+          <img src="/static/logo/TTT-logo3.png" alt="logo">
         </div>
 
         <div class="menu">
           <ul>
-            <li class="menu-text"><a href="{% url 'home' %}">Home</a></li>
-            <li class="menu-text"><a href="{% url 'movies' %}">Movies</a></li>
-            <li class="menu-text"><a href="{% url 'series' %}">Series</a></li>
-            <li class="menu-text"><a href="{% url 'drama' %}">Drama</a></li>
+            <li class="menu-text"><a href="/homepage/">Home</a></li>
+            <li class="menu-text"><a href="/homepage/">Movies</a></li>
+            <li class="menu-text"><a href="/homepage/">Series</a></li>
+            <li class="menu-text"><a href="/homepage/">Drama</a></li>
           </ul>
         </div>
       </div>
 
-<!--      <form action="{% url 'movies' %}" method="get">-->
-<!--            <div class="search-container">-->
-<!--                <label>-->
-<!--                    <select class="dropdown" name="category">-->
-<!--                        <option value="" selected disabled>Select</option>-->
-<!--                        <option>Definition</option>-->
-<!--                        <option>Cast</option>-->
-<!--                        <option>Status</option>-->
-<!--                        <option>Platform</option>-->
-<!--                    </select>-->
-<!--                </label>-->
-<!--                <input type="text" class="search-input" name="searchQuery" placeholder=" Search..." required>-->
-<!--                <button type="submit" class="search-button">-->
-<!--                    <span class="material-symbols-outlined">search</span>-->
-<!--                </button>-->
-<!--            </div>-->
-<!--        </form>-->
-        <form action="{% url 'recommend' %}" method="get">
-        <div class="search-container">
-            <label>
-                <select class="dropdown" id="category" name="category">
-                    <option value="" selected disabled>Select</option>
-                    <option value="definition">Definition</option>
-                    <option value="cast">Cast</option>
-                    <option value="status">Status</option>
-                    <option value="platform">Platform</option>
-                </select>
-            </label>
-            <input type="text" class="search-input" id="searchQuery" name="searchQuery" placeholder="Search..." required>
-            <button type="submit" class="search-button">
-                <span class="material-symbols-outlined">search</span>
-            </button>
-        </div>
+    <!-- Center Section: Search Bar -->
+    <div class="search-container">
+     <!-- In side_header.html -->
+
+    <form action="{% url 'search_movies_by_title' %}" method="get" class="search-bar">
+        <input type="text" class="search-input" name="searchQuery" placeholder="Search..." required>
+        <button type="submit" class="search-button">
+            <span class="material-symbols-outlined">search</span>
+        </button>
     </form>
 
 
+
+</div><button class="advanced-search-btn" onclick="openPopup()">Advanced Search</button>
+
+
+
+<script>
+    document.getElementById("search-form").addEventListener("submit", function(event) {
+        const query = document.getElementById("searchQuery").value.trim();
+
+        if (!query) {
+            alert("Please enter a search term.");
+            event.preventDefault();  // Prevent form submission if empty
+        }
+    });
+</script>
+
       <div class="nav-icons">
-          <a href="{% url 'home' %}">
+          <a href="/community/">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"/>
               </svg>
@@ -318,59 +458,194 @@
               </svg>
           </a>
 
-          <a href="{% url 'home' %}">
+          <a href="/homepage/">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
                   <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"/>
               </svg>
           </a>
 
-          <a href="{% url 'home' %}">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
-                  <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
-              </svg>
-          </a>
+          <div class="dropdown" >
+              <li class="icon">
+                  <a class="flex-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+                          <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
+                      </svg>
+                  </a>
+                  <div class="dropdown-content">
+                      <a href="{% url '//' %}">About</a>
+                      <a href="/settings/">Settings</a>
+                      <a href="/logout/">Log out</a>
+                  </div>
+              </li>
+          </div>
+
           <span class="line">|</span>
           <div class="user">
               <li class="menu-text"><a href="/login/">Log in</a></li>
               <li class="menu-text"><a href="/signup/">Sign up</a></li>
-
           </div>
 
 <!--          <h3 class="name">NichaParich02</h3>-->
 
-          <a href="{% url 'home' %}">
-	        <img src="/static/icons/user.png" alt="Profile Photo" class="account">
-          </a>
-<!--          <a href="{% url '//' %}">-->
-<!--	        <img src="../static/icons/NichaParich.png" alt="Profile Photo" class="profile-photo">-->
-<!--          </a>-->
+            <a href="{% url '//' %}">
+                <img src="../static/icons/user.png" alt="Profile Photo" class="profile-photo">
+            </a>
       </div>
     </nav>
 
-    <script>
-        function handleKeyPress(event) {
-            if (event.key === "Enter") {
-                startSearch();
-            }
-        }
+<!-- Advanced Search Button -->
+<!--<button class="advanced-search-btn" onclick="openPopup()">Advanced Search</button>-->
 
-        function startSearch() {
-            const category = document.getElementById("category").value;
-            const query = document.getElementById("searchQuery").value;
-            if (query.trim() !== "") {
-                alert(`Searching for "${query}" in ${category}`);
-                // Redirect to search results or perform search logic here
-            }
-        }
+<!-- Popup Overlay -->
+<div class="popup-overlay" id="popupOverlay" style="display: none;">
+    <div class="popup">
+        <h2>Advanced Search</h2>
+        <label>Genre:</label>
+        <select>
+            <option value="" disabled selected>Select Genre</option>
+            <option value="Action">Action</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Animation">Animation</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Crime">Crime</option>
+            <option value="Documentary">Documentary</option>
+            <option value="Drama">Drama</option>
+            <option value="Family">Family</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="History">History</option>
+            <option value="Horror">Horror</option>
+            <option value="Music">Music</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Romance">Romance</option>
+            <option value="Science Fiction">Science Fiction</option>
+            <option value="Thriller">Thriller</option>
+            <option value="TV Movie">TV Movie</option>
+            <option value="War">War</option>
+            <option value="Western">Western</option>
+        </select>
+        <label>Cast:</label>
+        <input type="text" placeholder="Enter cast name">
+        <label>Description:</label>
+        <input type="text" placeholder="Enter description">
+        <label>Published Date:</label>
+        <div class="date-range">
+            <input type="date" id="start-date">
+            <span>-</span>
+            <input type="date" id="end-date">
+        </div>
+        <div class="popup-actions">
+            <button class="cancel-btn" onclick="closePopup()">Cancel</button>
+            <button class="apply-btn" onclick="submitAdvancedSearch()">Apply</button>
+
+
+        </div>
+    </div>
+</div>
+
+ <script>
+        // เปิดป๊อปอัพ
+        function openPopup() { document.getElementById("popupOverlay").style.display = "flex"; }
+        function closePopup() { document.getElementById("popupOverlay").style.display = "none"; }
+
     </script>
+ <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const applyBtn = document.getElementById('apply-btn');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', submitAdvancedSearch);
+    }
+});
+</script>
 
-    <script>
-    document.getElementById("search-form").addEventListener("submit", function(event) {
-        event.preventDefault(); // ป้องกันการ submit แบบปกติ
-        window.location.href = "http://127.0.0.1:8000/recommend/"; // ลิ้งค์ไปที่ recommend ทันที
+<script>
+function submitAdvancedSearch() {
+    const genre = document.querySelector('select').value;
+    const cast = document.querySelector('input[placeholder="Enter cast name"]').value;
+    const description = document.querySelector('input[placeholder="Enter description"]').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+
+    console.log("Submitted data:", { genre, cast, description, startDate, endDate });
+
+    // Prepare the data to be sent to the backend
+    const data = {
+        genre,
+        cast,
+        description,
+        start_date: startDate,
+        end_date: endDate
+    };
+
+fetch('/recommend_advanced/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        genre: selectedGenre,
+        cast: selectedCast,
+        description: selectedDescription,
+        start_date: startDate,
+        end_date: endDate,
+    })
+})
+.then(response => response.json())
+.then(data => {
+    console.log('Backend response:', data);
+    if (data.success) {
+        // Redirect to the 'movies_advance' page after successful recommendation
+        window.location.href = '/movies_advance/';
+    }
+})
+.catch(error => console.error('Error:', error));
+
+
+</script>
+
+
+<script>
+// Wait until the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the Apply button element
+    const applyBtn = document.getElementById('apply-btn');
+
+    // Add a click event listener to the Apply button
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+            // Collect data from the form or input fields
+            const data = {
+                genre: document.getElementById('genre').value,
+                cast: document.getElementById('cast').value,
+                overview: document.getElementById('overview').value,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+            };
+
+            // Send data to the backend using fetch API
+            fetch('/recommend_advanced/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        genre: selectedGenre,
+        cast: selectedCast,
+        description: selectedDescription,
+        start_date: startDate,
+        end_date: endDate,
+    })
+})
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/movies_advance/';  // Redirect after success
+        } else {
+            console.error('Error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
-    </script>
-
-
+</script>
 </body>
 </html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies / ThaiTrendTrack</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200&family=Roboto+Condensed&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        /* Navbar styling */
+        #navbar-placeholder {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+        }
+
+        /* Main content styling */
+        .main {
+            padding-top: 100px; /* Offset for fixed navbar */
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .text-content {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .ttt-text {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: #333;
+        }
+
+        /* Movie Grid Layout */
+        .movies-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .movie-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+            text-align: center;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+
+        .movie-image {
+            width: 100%;
+            height: 350px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .movie-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #222;
+        }
+
+        .movie-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .movie-year {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .btn-more {
+            display: inline-block;
+            padding: 8px 15px;
+            font-size: 14px;
+            color: white;
+            background-color: #DC0856;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-more:hover {
+            background-color: #b00545;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navbar Placeholder -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <div class="text-content">
+            <p class="ttt-text">
+                {% if search_query %}
+                    Results for: "{{ search_query }}"
+                {% else %}
+                    Movies
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Movies Grid -->
+        <div class="movies-container">
+            {% if movies %}
+                {% for movie in movies %}
+                <div class="movie-card">
+                    <div class="movie-image">
+                        <img src="{{ movie.poster_path }}" alt="Poster for {{ movie.title_en }}">
+                    </div>
+                    <div class="movie-info">
+                        <p class="movie-title">{{ movie.title_en }}</p>
+                        <p class="movie-subtitle">{{ movie.title_th }}</p>
+                        <p class="movie-year">Release Year: {{ movie.release_date|date:"Y" }}</p>
+                        <a href="{% url 'movie_detail' movie.id %}" class="btn-more">View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; font-size: 18px; color: #777;">No movies found. Try a different search.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Load the external navbar
+        fetch('{% static "components/side_header.html" %}')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading navbar:', error));
+    </script>
+
+</body>
+</html>

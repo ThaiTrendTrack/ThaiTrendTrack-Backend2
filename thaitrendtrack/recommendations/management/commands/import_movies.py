@@ -1,115 +1,101 @@
-# from django.core.management.base import BaseCommand
-# import pandas as pd
-# from recommendations.models import Movie
-#
-#
-# class Command(BaseCommand):
-#     help = 'Load movies from CSV into the database'
-#
-#     def handle(self, *args, **kwargs):
-#         csv_path = "get_databased/thai_movies_with_titles_and_posters.csv"
-#         try:
-#             # Read the CSV data
-#             movies_df = pd.read_csv(csv_path)
-#
-#             # Iterate through the CSV data and add it to the database
-#             for index, row in movies_df.iterrows():
-#                 genres = row['genres']
-#
-#                 # Check if genres is a string before splitting
-#                 if isinstance(genres, str):
-#                     genre_list = genres.split(', ')  # Split the string by commas
-#                 else:
-#                     genre_list = []  # If it's not a string, set genres to an empty list
-#
-#                 # Parse release_date manually if it's a valid string
-#                 try:
-#                     # Attempt to convert release_date to datetime
-#                     release_date = pd.to_datetime(row['release_date'], errors='coerce')
-#
-#                     # If release_date is NaT, set it to None
-#                     if pd.isna(release_date):
-#                         release_date = None
-#                     else:
-#                         release_date = release_date.date()  # Convert to date type
-#                 except Exception as e:
-#                     print(f"Error parsing release_date: {row['release_date']} - {e}")
-#                     release_date = None  # Set to None if the date can't be parsed
-#
-#                 # Create the movie entry in the database
-#                 Movie.objects.create(
-#                     title_en=row['english_title'],  # Use the correct column name
-#                     title_th=row['thai_title'],  # Use the correct column name
-#                     release_date=release_date,  # Use the parsed date
-#                     genres=genre_list,  # Use the generated genre list
-#                     description=row['overview'],  # Use the correct column name
-#                     poster_path=row['poster_path'],
-#                     runtime=None,
-#                     popularity=row['popularity'],  # Add popularity data if available
-#                     vote_average=row['vote_average']
-#
-#                 )
-#
-#             self.stdout.write(self.style.SUCCESS('Movies imported successfully'))
-#         except Exception as e:
-#             self.stdout.write(self.style.ERROR(f'Error: {str(e)}'))
-
+import csv
+import pickle
 from django.core.management.base import BaseCommand
-import pandas as pd
 from recommendations.models import Movie
 
+
 class Command(BaseCommand):
-    help = 'Load movies from CSV into the database'
+    help = "Import movies from CSV"
+
+    def parse_watch_platforms(self, watch_platforms):
+        """
+        Convert semicolon-separated watch platform data into a JSON dictionary.
+        Example:
+        "AD: Netflix; AE: Netflix, Netflix Basic with Ads"
+        → {"AD": {"streaming": ["Netflix"]}, "AE": {"streaming": ["Netflix", "Netflix Basic with Ads"]}}
+        """
+        if not watch_platforms or watch_platforms.lower() == "n/a":
+            return {}
+
+        platforms_dict = {}
+        try:
+            entries = watch_platforms.split(";")  # Split by semicolon
+            for entry in entries:
+                parts = entry.split(":")
+                if len(parts) == 2:
+                    country = parts[0].strip()
+                    services = [s.strip() for s in parts[1].split(",")]
+                    platforms_dict[country] = {"streaming": services}
+            return platforms_dict
+        except Exception as e:
+            print(f"❌ Error parsing watch_platforms: {watch_platforms} → {e}")
+            return {}
 
     def handle(self, *args, **kwargs):
-        csv_path = "get_databased/thai_movies_with_titles_and_posters.csv"
+        csv_file_path = "get_databased/thai_movies_and_tv_series_2.csv"  # Ensure this path is correct
 
         try:
-            # Load movie data from CSV
-            movies_df = pd.read_csv(csv_path).fillna('')  # Fill NaN with empty strings
+            with open(csv_file_path, newline="", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile)
 
-            movie_objects = []  # List to hold movie instances
+                for row in reader:
+                    try:
+                        # ✅ Handle missing columns with `.get()`
+                        genres = row.get("genres", "").split(",") if row.get("genres") else []
+                        cast = row.get("cast", "").split(",") if row.get("cast") else []
+                        overview = row.get("overview", "").strip()  # ✅ Add overview
+                        status = row.get("status", "Unknown").strip()
+                        runtime = row.get("runtime", "").strip() if row.get("runtime") else None
 
-            for _, row in movies_df.iterrows():
-                # Ensure genres are stored correctly as a string
-                genres = row['genres']
-                if isinstance(genres, str):
-                    genre_list = [genre.strip() for genre in genres.split(',')]
-                else:
-                    genre_list = []
+                        # ✅ Convert semicolon-separated watch_platforms to JSON
+                        watch_platforms_raw = row.get("watch_platforms", "").strip()
+                        watch_platforms = self.parse_watch_platforms(watch_platforms_raw)
 
-                genres_string = ", ".join(genre_list)  # Convert list to string
+                        # ✅ Convert numerical fields safely
+                        try:
+                            popularity = float(row.get("popularity", 0)) if row.get("popularity") else None
+                        except ValueError:
+                            print(f"⚠️ Warning: Invalid popularity value -> {row.get('popularity')}")
+                            popularity = None  # Default to None
 
-                # Parse release_date safely
-                try:
-                    release_date = pd.to_datetime(row['release_date'], errors='coerce')
-                    release_date = release_date.date() if pd.notna(release_date) else None
-                except Exception as e:
-                    print(f"Error parsing release_date: {row['release_date']} - {e}")
-                    release_date = None
+                        try:
+                            vote_average = float(row.get("vote_average", 0)) if row.get("vote_average") else None
+                        except ValueError:
+                            print(f"⚠️ Warning: Invalid vote_average value -> {row.get('vote_average')}")
+                            vote_average = None  # Default to None
 
-                # Create movie object (but don't save yet)
-                movie_objects.append(
-                    Movie(
-                        title_en=row['english_title'],
-                        title_th=row['thai_title'],
-                        release_date=release_date,
-                        genres=genres_string,  # ✅ Stored as a clean string
-                        description=row['overview'],
-                        poster_path=row['poster_path'],
-                        runtime=None,  # Can be updated later
-                        popularity=row['popularity'],
-                        vote_average=row['vote_average']
-                    )
-                )
+                        # ✅ Convert release_date safely
+                        release_date = row.get("release_date") if row.get("release_date") else None
 
-            # Bulk insert movies for efficiency
-            if movie_objects:
-                Movie.objects.bulk_create(movie_objects)
-                self.stdout.write(self.style.SUCCESS(f'{len(movie_objects)} movies imported successfully'))
-            else:
-                self.stdout.write(self.style.WARNING('No movies found to import'))
+                        # ✅ Create or update movie record
+                        movie, created = Movie.objects.get_or_create(
+                            title_th=row.get("thai_title", ""),
+                            title_en=row.get("english_title", ""),
+                            original_title=row.get("original_title", ""),
+                            genres=genres,
+                            overview=overview,  # ✅ Add overview
+                            status=status,
+                            release_date=release_date,
+                            poster_path=row.get("poster_path", ""),
+                            cast=cast,
+                            watch_platforms=watch_platforms,
+                            content_type=row.get("content_type", ""),
+                            popularity=popularity,
+                            vote_average=vote_average,
+                            runtime=runtime,
+                        )
 
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Error: {str(e)}'))
+                        # ✅ Update embedding (only if created new record)
+                        if created or not movie.embedding:
+                            movie.save()  # ✅ ใช้ `save()` เพื่อให้ Model คำนวณ embedding อัตโนมัติ
 
+                        if created:
+                            print(f"✅ Added: {movie.title_en}")
+                        else:
+                            print(f"🔄 Updated: {movie.title_en}")
+
+                    except Exception as e:
+                        print(f"❌ Error processing row {row}: {e}")
+
+        except FileNotFoundError:
+            print(f"❌ CSV file '{csv_file_path}' not found! Make sure it's in the correct directory.")
